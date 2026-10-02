@@ -38,7 +38,7 @@ ul{padding-left:18px;margin:4px 0}
 <div class="mu" id="route">Origem: — | Alvo: —</div>
 <h3>2. Arma e potência</h3>
 <div class="row"><select id="pr"></select></div>
-<div id="yl" class="mu"></div><input id="y" type="range" min="0" max="5" step="0.01" value="2.18">
+<div id="yl" class="mu"></div><input id="y" type="range" min="1" max="1.4" step="0.01" value="1.18">
 <div class="row"><select id="bt"><option value="air">Explosão aérea (cenário)</option><option value="gnd">Explosão em solo (gera fallout)</option></select></div>
 <div class="mu">Direção do vento (fallout): <span id="wl">90</span>° (0=N, 90=L)</div><input id="w" type="range" min="0" max="359" value="90">
 <h3>3. Cenário</h3>
@@ -56,11 +56,11 @@ ul{padding-left:18px;margin:4px 0}
 <li><b>Data de corte:</b> fatos posteriores a 27/07/1945 não são usados para descrever o contexto.</li>
 <li><b>Arma atômica:</b> Trinity foi testado em 16/07/1945. Registros contemporâneos mostram que o governo dos EUA conhecia o sucesso do teste e preparava o emprego da nova arma.</li>
 <li><b>Ordem de 25/07/1945:</b> autorizava o 509th Composite Group a entregar a primeira “special bomb” depois de cerca de 3 de agosto contra Hiroshima, Kokura, Niigata ou Nagasaki; também previa bombas adicionais quando prontas.</li>
-<li><b>Mortes:</b> o simulador não usa Hiroshima/Nagasaki como calibração histórica, pois ainda não haviam ocorrido. As mortes são estimativas hipotéticas a partir de população histórica e zonas físicas simplificadas.</li>
+<li><b>Mortes:</b> Hiroshima e Nagasaki ainda não haviam sido atacadas até a data de corte. Os resultados são cenários hipotéticos calculados com um modelo simplificado; não são números registrados em 1945.</li>
 <li><b>População:</b> o conjunto reduzido usa dados históricos: Censo dos EUA de 1940 (publicado em 1942), Censo japonês de 1940 e Censo soviético de 1939. Onde não há dado histórico suficientemente confiável no recorte, a cidade não é usada.</li>
 <li><b>Geopolítica:</b> Declaração de Potsdam (26/07/1945); Acordo de Yalta sobre o Japão (11/02/1945); denúncia soviética do Pacto de Neutralidade (05/04/1945); Carta da ONU (26/06/1945, ainda não em vigor).</li>
-<li><b>Não usar:</b> OTAN (1949), tratado EUA–Japão (1960), arsenais nucleares modernos, ICBMs, NUKEMAP, FAS moderna ou estudos posteriores de inverno nuclear.</li>
-<li><b>Fontes primárias:</b> documentos de 1941–1945 preservados em arquivos nacionais; a página web atual é apenas o meio de acesso. O conteúdo documental é contemporâneo ao recorte.</li>
+<li><b>Limite do recorte:</b> não são usados arsenais, tecnologias, doutrinas ou acontecimentos posteriores a 27/07/1945 como fatos do cenário. As opções de potência ficam limitadas às estimativas associadas ao teste Trinity e à primeira bomba especial então em preparação.</li>
+<li><b>Fontes:</b> o contexto histórico é limitado a documentos e informações disponíveis até 27/07/1945. Sites atuais são usados apenas como meios de acesso a documentos; a data de publicação de uma página não significa que eventos posteriores sejam incorporados ao cenário.</li>
 </ul></details>
 </div>
 <div id="mapw"><div id="hint">Carregando mapa…</div><div id="map"></div></div>
@@ -85,8 +85,8 @@ let CITIES='Tóquio,35.7,139.7,6.779;Osaka,34.7,135.5,3.252;Nagoia,35.2,136.9,1.
 const PL=[['Tinian — 509th Composite Group',145.62,15.0,'USA','EUA'],['Alamogordo — Trinity',-106.55,33.88,'USA','EUA'],['Wendover Field — 509th',-114.04,40.72,'USA','EUA']];
 const PT=[['Hiroshima',132.5,34.4,'JPN','Japão'],['Kokura',130.88,33.88,'JPN','Japão'],['Niigata',139.04,37.92,'JPN','Japão'],['Nagasaki',129.88,32.75,'JPN','Japão'],['Tóquio',139.7,35.7,'JPN','Japão']];
 PL.forEach((p,i)=>$('pL').add(new Option(p[0],i)));PT.forEach((p,i)=>$('pT').add(new Option(p[0],i)));
-const PR=[['Trinity — ~20 kt (teste)',20],['Bomba especial — ~15 kt (hipótese)',15],['Plutônio — ~20 kt (hipótese)',20],['100 kt — contrafactual, não disponível em 1945',100],['300 kt — contrafactual, não disponível em 1945',300],['1 megaton — contrafactual, não disponível em 1945',1000]];
-PR.forEach((p,i)=>$('pr').add(new Option(p[0],i)));$('pr').value=1;
+const PR=[['Bomba especial — ~15 kt (estimativa de 1945)',15],['Trinity — ~20 kt (teste de 16/07/1945)',20]];
+PR.forEach((p,i)=>$('pr').add(new Option(p[0],i)));$('pr').value=0;
 let S={L:null,T:null,mode:'L',scen:0,k:1};
 const Y=()=>Math.pow(10,+$('y').value);
 const fy=y=>y>=1000?(y/1000).toFixed(y>=10000?0:1)+' Mt':Math.round(y)+' kt';
