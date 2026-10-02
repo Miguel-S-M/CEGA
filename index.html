@@ -1,225 +1,139 @@
 <!doctype html>
-<html lang="pt-BR"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Simulador Nuclear — 27/07/1945</title>
-<style>
-:root{--bg:#f3f5f8;--pn:#fff;--tx:#14202e;--mu:#5d6b7c;--ln:#cbd5e1;--land:#dfe7ef;--sea:#bcd3e6;--bd:#6b829a;--ac:#d62d20;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b1118;--pn:#131c27;--tx:#e6edf5;--mu:#8fa0b3;--ln:#263545;--land:#1d2b3a;--sea:#0b1622;--bd:#4d6a88}}
-:root[data-theme="dark"]{--bg:#0b1118;--pn:#131c27;--tx:#e6edf5;--mu:#8fa0b3;--ln:#263545;--land:#1d2b3a;--sea:#0b1622;--bd:#4d6a88}
-*{box-sizing:border-box}html,body{height:100%;margin:0;background:var(--bg);color:var(--tx);font:14px/1.4 system-ui,sans-serif}
-#app{display:flex;height:100%}
-#side{width:370px;max-width:100%;overflow-y:auto;padding:12px;background:var(--pn);border-right:1px solid var(--ln)}
-#mapw{flex:1;position:relative;background:var(--sea);min-width:0}#map{position:absolute;inset:0}
-#map path{vector-effect:non-scaling-stroke}
-@media(max-width:820px){#app{flex-direction:column-reverse}#side{width:100%;height:58%;border:0;border-top:1px solid var(--ln)}#mapw{height:42%;flex:none}}
-h1{font-size:17px;margin:0 0 8px}h3{font-size:13px;margin:12px 0 4px;color:var(--mu);text-transform:uppercase;letter-spacing:.04em}
-button,select{background:var(--bg);color:var(--tx);border:1px solid var(--ln);border-radius:6px;padding:6px 8px;font:inherit;cursor:pointer}
-button.on{background:var(--ac);border-color:var(--ac);color:#fff}
-.row{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0}.row>*{flex:1}
-input[type=range]{width:100%}
-.card{border:1px solid var(--ln);border-radius:8px;padding:8px;margin:6px 0;background:var(--bg)}
-.big{font-size:22px;font-weight:700}.mu{color:var(--mu);font-size:12px}
-table{width:100%;border-collapse:collapse}td{padding:2px 0;border-bottom:1px solid var(--ln)}td:last-child{text-align:right}
-.lg i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px}
-ul{padding-left:18px;margin:4px 0}
-#hint{position:absolute;left:8px;top:8px;background:var(--pn);border:1px solid var(--ln);padding:4px 8px;border-radius:6px;font-size:12px;z-index:2}
-#err{padding:20px;color:var(--ac)}
-</style></head><body>
-<div id="app">
-<div id="side">
-<h1>☢️ Simulador de Detonação Nuclear</h1>
-<div class="mu">Ferramenta educacional. Modelo simplificado com alta incerteza — não são dados oficiais.</div>
-<h3>1. Origem e alvo (clique no mapa)</h3>
-<div class="row"><button id="mL" class="on">📍 Definir origem</button><button id="mT">🎯 Definir alvo</button></div>
-<div class="row"><select id="pL"><option value="">Origem histórica…</option></select><select id="pT"><option value="">Alvo rápido…</option></select></div>
-<div class="row"><button id="zoomT">🔍 Aproximar do alvo</button><button id="zoom0">🌍 Mundo</button></div>
-<div class="mu" id="route">Origem: — | Alvo: —</div>
-<h3>2. Arma e potência</h3>
-<div class="row"><select id="pr"></select></div>
-<div id="yl" class="mu"></div><input id="y" type="range" min="0" max="5" step="0.01" value="2.18">
-<div class="row"><select id="bt"><option value="air">Explosão aérea (cenário)</option><option value="gnd">Explosão em solo (gera fallout)</option></select></div>
-<div class="mu">Direção do vento (fallout): <span id="wl">90</span>° (0=N, 90=L)</div><input id="w" type="range" min="0" max="359" value="90">
-<h3>3. Cenário</h3>
-<div class="row"><button id="c0" class="on">Sem escalada nuclear</button><button id="c1">Crise internacional</button></div>
-<div class="card"><div class="mu"><b>Parâmetros avançados</b></div>
-<div class="mu">Bombas no alvo (hipótese contrafactual): <b id="nwl">1</b></div><input id="nw" type="range" min="1" max="12" value="1">
-<div class="mu">% do armamento empregado: <b id="pll">60</b>%</div><input id="pl" type="range" min="0" max="100" value="60">
-<div class="mu">% interceptado: <b id="pil">25</b>%</div><input id="pi" type="range" min="0" max="100" value="25">
-<div class="mu">% das bombas contra cidades (resto: alvos militares): <b id="cvl">50</b>%</div><input id="cv" type="range" min="0" max="100" value="50">
-<div class="mu">% da população abrigada contra fallout: <b id="shl">30</b>%</div><input id="sh" type="range" min="0" max="100" value="30">
-<div class="row"><select id="rs"><option value="0.15">Crise limitada</option><option value="0.5">Crise ampliada</option><option value="1" selected>Crise máxima</option></select><button id="cp">🔗 Copiar link</button></div></div>
-<div id="out"></div>
-<h3>Raios dos efeitos</h3><div class="lg" id="lg"></div>
-<details class="card"><summary><b>Fontes e premissas — corte em 27/07/1945</b></summary><ul class="mu">
-<li><b>Data de corte:</b> fatos posteriores a 27/07/1945 não são usados para descrever o contexto.</li>
-<li><b>Arma atômica:</b> Trinity foi testado em 16/07/1945. Registros contemporâneos mostram que o governo dos EUA conhecia o sucesso do teste e preparava o emprego da nova arma.</li>
-<li><b>Ordem de 25/07/1945:</b> autorizava o 509th Composite Group a entregar a primeira “special bomb” depois de cerca de 3 de agosto contra Hiroshima, Kokura, Niigata ou Nagasaki; também previa bombas adicionais quando prontas.</li>
-<li><b>Mortes:</b> o simulador não usa Hiroshima/Nagasaki como calibração histórica, pois ainda não haviam ocorrido. As mortes são estimativas hipotéticas a partir de população histórica e zonas físicas simplificadas.</li>
-<li><b>População:</b> o conjunto reduzido usa dados históricos: Censo dos EUA de 1940 (publicado em 1942), Censo japonês de 1940 e Censo soviético de 1939. Onde não há dado histórico suficientemente confiável no recorte, a cidade não é usada.</li>
-<li><b>Geopolítica:</b> Declaração de Potsdam (26/07/1945); Acordo de Yalta sobre o Japão (11/02/1945); denúncia soviética do Pacto de Neutralidade (05/04/1945); Carta da ONU (26/06/1945, ainda não em vigor).</li>
-<li><b>Não usar:</b> OTAN (1949), tratado EUA–Japão (1960), arsenais nucleares modernos, ICBMs, NUKEMAP, FAS moderna ou estudos posteriores de inverno nuclear.</li>
-<li><b>Fontes primárias:</b> documentos de 1941–1945 preservados em arquivos nacionais; a página web atual é apenas o meio de acesso. O conteúdo documental é contemporâneo ao recorte.</li>
-</ul></details>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Simulador de decisão — 27/07/1945</title><link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header><div><b>SIMULADOR 1945</b><span> • PACÍFICO • 27 JULHO 1945</span></div><nav class="topnav"><a class="site-link" href="nuclear.html">☢ Simulador nuclear</a><button id="reset">Resetar</button></nav></header>
+<main>
+<h1>Impedir o lançamento da bomba</h1>
+<p class="intro">Escolha medidas e veja orçamento, pressão política e custos humanos estimados. Valores históricos e hipóteses de jogo estão separados.</p>
+<div class="notice"><b>Como ler as mortes:</b> propaganda e diplomacia não têm estimativa confiável de mortes diretas; bloqueios podem causar mortes indiretas por escassez, mas não existe taxa histórica oficial por nível de intensidade. O simulador não inventa números para esses casos. A invasão mostra a faixa de planejamento registrada para a operação Downfall completa.</div>
+
+<section class="layout">
+<div class="maincol">
+<section class="box">
+<h2>1. Orçamento e duração</h2>
+<div class="formgrid">
+<label>Orçamento disponível (US$ de 1945)<input id="budget" type="number" min="0" step="100000" value="5000000"></label>
+<label>Duração do plano (meses)<input id="months" type="number" min="1" max="24" value="3"></label>
 </div>
-<div id="mapw"><div id="hint">Carregando mapa…</div><div id="map"></div></div>
+<div class="totals"><div><small>Gasto planejado</small><strong id="spent">$ 5.000.000</strong></div><div><small>Saldo</small><strong id="balance">$ 0</strong></div></div>
+</section>
+
+<section class="box">
+<h2>2. Escolha as medidas</h2>
+<p class="muted">Ative uma medida e ajuste sua intensidade. Custos são hipóteses editáveis do jogo, não preços oficiais de 1945.</p>
+<div class="method">
+<div class="methodtop"><label class="check"><input type="checkbox" id="onRadio" checked> <b>Rádio e propaganda</b></label><span class="tag">direto: sem estimativa de mortes</span></div>
+<div class="formgrid"><label>Intensidade <output id="radioOut">60%</output><input type="range" id="radio" min="0" max="100" value="60"></label><label>Verba por mês ($)<input type="number" id="radioCost" min="0" step="10000" value="150000"></label></div>
+<p class="muted">Mensagens sobre termos de rendição, segurança de civis e consequências da continuação da guerra.</p>
 </div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
-<script>window.d3||document.write('<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"><\/script>')</script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson-client/3.1.0/topojson-client.min.js"></script>
-<script>window.topojson||document.write('<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"><\/script>')</script>
-<script>
-(function(){
-if(typeof d3==='undefined'){document.getElementById('map').innerHTML='<div id="err">Não foi possível carregar o d3.js (verifique a internet).</div>';return}
-const $=id=>document.getElementById(id),RAD=Math.PI/180,ER=6371;
-const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
-// [warheads estoque, nome, população mi]
-const NUC={USA:[1,'EUA',132.165129]}; // Trinity testado; não representa um estoque moderno
-const POP={JPN:73.114308,KOR:25,DEU:69.3,CAN:11.4,ITA:44.5,ESP:26,POL:24,TUR:18,AUS:7,TWN:5.9,BLR:9.2,UKR:40,IRN:15,CHN:517};
-const UMB={JPN:['USA'],KOR:['USA'],AUS:['USA'],TWN:['USA'],BLR:['RUS']};
-'DEU ITA ESP POL TUR NLD BEL NOR DNK PRT GRC CZE ROU HUN BGR HRV SVK SVN LTU LVA EST ALB ISL LUX CAN FIN SWE'.split(' ').forEach(c=>UMB[c]=['USA','GBR','FRA']);
-const AY={USA:1};
-const DEV={USA:.60,JPN:.45,RUS:.45,CHN:.35,GBR:.60,FRA:.50,DEU:.45,KOR:.35,IND:.30,PAK:.25,IRN:.30,PRK:.20};
-let CITIES='Tóquio,35.7,139.7,6.779;Osaka,34.7,135.5,3.252;Nagoia,35.2,136.9,1.328;Quioto,35,135.8,1.090;Yokohama,35.4,139.6,.968;Kobe,34.7,135.2,.967;Hiroshima,34.4,132.5,.344;Fukuoka,33.6,130.4,.307;Nagasaki,32.75,129.88,.205;Moscou,55.75,37.6,4.137;Leningrado,59.9,30.3,3.191;Kiev,50.45,30.5,.846;Kharkov,49.99,36.23,.833;Baku,40.4,49.87,.809;Gorki,56.33,44,.644;Odessa,46.48,30.73,.604;Tashkent,41.3,69.25,.585;Rostov,47.23,39.7,.510;Nova York,40.7,-74,7.455;Chicago,41.9,-87.6,3.397;Filadélfia,39.95,-75.17,1.931;Detroit,42.33,-83.05,1.623;Los Angeles,34.05,-118.2,1.504;Cleveland,41.5,-81.69,.878;Baltimore,39.29,-76.61,.859;St. Louis,38.63,-90.2,.816;Boston,42.36,-71.06,.771;Pittsburgh,40.44,-79.99,.672;Washington,38.9,-77,.663;São Francisco,37.8,-122.4,.635;Milwaukee,43.04,-87.91,.587;Buffalo,42.89,-78.88,.576;Nova Orleans,29.95,-90.07,.495;Minneapolis,44.98,-93.27,.492;Cincinnati,39.1,-84.51,.456;Kansas City,39.1,-94.58,.399;Indianápolis,39.77,-86.16,.387;Londres,51.5,-.1,4.013'.split(';').map(s=>{s=s.split(',');return{n:s[0],la:+s[1],lo:+s[2],p:+s[3]*1e6,s:7*Math.pow(+s[3],.35)}});
-const PL=[['Tinian — 509th Composite Group',145.62,15.0,'USA','EUA'],['Alamogordo — Trinity',-106.55,33.88,'USA','EUA'],['Wendover Field — 509th',-114.04,40.72,'USA','EUA']];
-const PT=[['Hiroshima',132.5,34.4,'JPN','Japão'],['Kokura',130.88,33.88,'JPN','Japão'],['Niigata',139.04,37.92,'JPN','Japão'],['Nagasaki',129.88,32.75,'JPN','Japão'],['Tóquio',139.7,35.7,'JPN','Japão']];
-PL.forEach((p,i)=>$('pL').add(new Option(p[0],i)));PT.forEach((p,i)=>$('pT').add(new Option(p[0],i)));
-const PR=[['Trinity — ~20 kt (teste)',20],['Bomba especial — ~15 kt (hipótese)',15],['Plutônio — ~20 kt (hipótese)',20],['100 kt — contrafactual, não disponível em 1945',100],['300 kt — contrafactual, não disponível em 1945',300],['1 megaton — contrafactual, não disponível em 1945',1000]];
-PR.forEach((p,i)=>$('pr').add(new Option(p[0],i)));$('pr').value=1;
-let S={L:null,T:null,mode:'L',scen:0,k:1};
-const Y=()=>Math.pow(10,+$('y').value);
-const fy=y=>y>=1000?(y/1000).toFixed(y>=10000?0:1)+' Mt':Math.round(y)+' kt';
-const fm=n=>n>=1e9?(n/1e9).toFixed(2)+' bi':n>=1e6?(n/1e6).toFixed(2)+' mi':n>=1e3?Math.round(n/1e3)+' mil':Math.round(n)+'';
-const N2A={840:'USA',643:'RUS',156:'CHN',250:'FRA',826:'GBR',356:'IND',586:'PAK',376:'ISR',408:'PRK',392:'JPN',410:'KOR',36:'AUS',158:'TWN',112:'BLR',276:'DEU',380:'ITA',724:'ESP',616:'POL',792:'TUR',528:'NLD',56:'BEL',578:'NOR',208:'DNK',620:'PRT',300:'GRC',203:'CZE',642:'ROU',348:'HUN',100:'BGR',191:'HRV',703:'SVK',705:'SVN',440:'LTU',428:'LVA',233:'EST',8:'ALB',352:'ISL',442:'LUX',124:'CAN',246:'FIN',752:'SWE',804:'UKR',364:'IRN'};
-const mapEl=$('map');
-const W=mapEl.clientWidth||900,H=mapEl.clientHeight||500,sc=Math.min(W/(2*Math.PI),H/Math.PI);
-const proj=d3.geoEquirectangular().scale(sc).translate([W/2,H/2]);
-const gp=d3.geoPath(d3.geoTransform({lineStart(){this.p=null;this.stream.lineStart()},point(x,y){if(this.p!==null&&Math.abs(x-this.p)>180)x+=x<this.p?360:-360;this.p=x;const q=proj([x,y]);this.stream.point(q[0],q[1])}}));
-const svgS=d3.select(mapEl).append('svg').attr('width','100%').attr('height','100%').style('display','block');
-const wrapS=svgS.append('g'),gC=wrapS.append('g'),ovS=wrapS.append('g').style('pointer-events','none');
-const ov=ovS.node();
-const SRC=['world.json','https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json','https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json','https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json','https://unpkg.com/world-atlas@2/countries-110m.json'];
-async function loadWorld(){for(const u of SRC){try{const r=await fetch(u);if(!r.ok)continue;const j=await r.json();
- if(j.type==='Topology'&&window.topojson)return topojson.feature(j,j.objects.countries).features;
- if(j.features)return j.features}catch(e){}}throw 0}
-loadWorld().then(f=>{
- gC.selectAll('path').data(f).enter().append('path').attr('d',gp).attr('fill',css('--land')).attr('stroke',css('--bd')).attr('stroke-width',.6).attr('fill-rule','evenodd').attr('vector-effect','non-scaling-stroke');
- const h=$('hint');if(h)h.textContent='Roda do mouse / pinça = zoom · arraste = mover';
-}).catch(()=>{mapEl.insertAdjacentHTML('beforeend','<div id="err">Não foi possível carregar as fronteiras. Baixe https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json e salve como world.json ao lado deste HTML.</div>')});
-const zoom=d3.zoom().scaleExtent([1,3000]).on('zoom',e=>{S.k=e.transform.k;wrapS.attr('transform',e.transform);draw()});
-svgS.call(zoom).on('dblclick.zoom',null);
-svgS.on('click',e=>{
- const ll=proj.invert(d3.pointer(e,wrapS.node()));
- if(!ll||Math.abs(ll[0])>180||Math.abs(ll[1])>90)return;
- let code=null,name='Oceano';const d=e.target.__data__;
- if(d&&d.properties){code=isNaN(+d.id)?(d.id||'OTH'):(N2A[+d.id]||'OTH');name=NUC[code]?NUC[code][1]:(d.properties.name||d.properties.NAME||code)}
- set(S.mode,{ll:ll,code:code,name:name});
-});
-function set(m,v){S[m]=v;if(m==='L'&&!S.T)setMode('T');upd()}
-function setMode(m){S.mode=m;$('mL').className=m==='L'?'on':'';$('mT').className=m==='T'?'on':''}
-$('mL').onclick=()=>setMode('L');$('mT').onclick=()=>setMode('T');
-$('pL').onchange=e=>{const p=PL[e.target.value];if(p){S.L={ll:[p[1],p[2]],code:p[3],name:p[4]};setMode('T');upd()}};
-$('pT').onchange=e=>{const p=PT[e.target.value];if(p){S.T={ll:[p[1],p[2]],code:p[3],name:p[4]};upd()}};
-$('pr').onchange=e=>{$('y').value=Math.log10(PR[e.target.value][1]);upd()};
-$('y').oninput=()=>upd();$('bt').onchange=upd;$('w').oninput=()=>{$('wl').textContent=$('w').value;upd()};
-$('c0').onclick=()=>{S.scen=0;$('c0').className='on';$('c1').className='';upd()};
-$('c1').onclick=()=>{S.scen=1;$('c1').className='on';$('c0').className='';upd()};
-$('zoom0').onclick=()=>svgS.call(zoom.transform,d3.zoomIdentity);
-$('zoomT').onclick=()=>{if(!S.T)return;const E=fx(),p=proj(S.T.ll),k=Math.max(1,Math.min(3000,150/(E.r1*sc/ER)));svgS.call(zoom.transform,d3.zoomIdentity.translate(W/2-k*p[0],H/2-k*p[1]).scale(k))};
-// efeitos físicos simplificados; coeficientes são hipóteses do simulador, não dados históricos publicados
-function fx(y){y=y||Y();const c=Math.cbrt(y),g=$('bt').value==='gnd'?.8:1;
- return{fire:.066*Math.pow(y,.4),r20:.21*c*g,r5:.47*c*g,r1:1.2*c*g,th:.65*Math.pow(y,.41),rad:.8*Math.pow(y,.2),L:8*Math.pow(y,.45),gnd:$('bt').value==='gnd'}}
-function hav(a,b){const dl=(b[0]-a[0])*RAD,dp=(b[1]-a[1])*RAD,x=Math.sin(dp/2)**2+Math.cos(a[1]*RAD)*Math.cos(b[1]*RAD)*Math.sin(dl/2)**2;return 2*ER*Math.asin(Math.sqrt(x))}
-const G=[];let GW=0;for(let i=-5;i<=5;i++)for(let j=-5;j<=5;j++){const a=i/2,b=j/2,w=Math.exp(-(a*a+b*b)/2);G.push([a,b,w]);GW+=w}
-const P=r=>({l:$('pl').value/100*(1-$('pi').value/100)*(r==null?$('rs').value:r)});
-function fracCity(s,E,y){const z=[[E.fire,1],[E.r20,.98],[E.r5,.6],[E.th,y>=100?.4:.25],[E.r1,.03],[E.rad,.9]].sort((a,b)=>a[0]-b[0]);let m=1,pf=0,t=0;for(const[r,l]of z){m=Math.min(m,l);let f=0;for(const q of G)if(Math.hypot(q[0]*s,q[1]*s)<r)f+=q[2];f/=GW;t+=(f-pf)*m;pf=f}return t}
-function cvd(popM,W,y){const cv=$('cv').value/100,nT=Math.min(400,Math.round(W*cv/2)),urb=popM*1e6*.6,E=fx(y);let H=0;for(let k=1;k<=400;k++)H+=1/k;let d=0;for(let k=1;k<=nT;k++){const p=urb/(H*k);d+=p*fracCity(7*Math.pow(p/1e6,.35),E,y)}return d+W*(1-cv)*2e4}
-function GZ(){const n=+$('nw').value,E=fx(),t=S.T.ll,dk=E.r5*1.6/(111.32*Math.cos(t[1]*RAD));return Array.from({length:n},(_,i)=>[t[0]+(i-(n-1)/2)*dk,t[1]])}
-function popIn(R,gzs,land){let s=0;for(const c of CITIES){let D=1e9;for(const g of gzs){if(Math.abs(c.la-g[1])*111>R+3*c.s)continue;const d=hav(g,[c.lo,c.la]);if(d<D)D=d}if(D-3*c.s>R)continue;let f=0;for(const q of G){if(Math.hypot(D+q[0]*c.s,q[1]*c.s)<R)f+=q[2]}s+=c.p*f/GW}return s+(land?25*Math.PI*R*R*.5*Math.max(1,gzs.length*.7):0)}
-function popIn_old(R,gz,land){let s=0;for(const c of CITIES){const D=hav(gz,[c.lo,c.la]);if(D-3*c.s>R)continue;let f=0;for(const q of G){if(Math.hypot(D+q[0]*c.s,q[1]*c.s)<R)f+=q[2]}s+=c.p*f/GW}return s+(land?25*Math.PI*R*R*.5:0)}
-function blast(gzs,land){const E=fx();
- let z=[[E.fire,1],[E.r20,.98],[E.r5,.6],[E.th,Y()>=100?.4:.25],[E.r1,.03],[E.rad,.9]].sort((a,b)=>a[0]-b[0]);
- let m=1,prev=0,dead=0,inj=0;
- for(const[r,l0]of z){m=Math.min(m,l0);const p=Math.max(0,popIn(r,gzs,land)-prev);dead+=p*m;inj+=p*(1-m)*.6;prev+=p}
- let fall=0;
- if(E.gnd){const th=(+$('w').value)*RAD,L=E.L,Wd=L*.18;
-  for(const gz of gzs){const cx=Math.cos(gz[1]*RAD);
-   for(const c of CITIES){const dx=(c.lo-gz[0])*111.32*cx,dy=(c.la-gz[1])*110.57,u=dx*Math.sin(th)+dy*Math.cos(th),v=dx*Math.cos(th)-dy*Math.sin(th);
-    if(Math.pow((u-L/2)/(L/2),2)+Math.pow(v/(Wd/2),2)<1&&hav(gz,[c.lo,c.la])>E.r5)fall+=c.p*.2/gzs.length}
-   fall+=land?Math.min(L*Wd*Math.PI/4*25*.15,3e7)/gzs.length:0}}
- return{dead,inj,fall:fall*(1-.7*$('sh').value/100),E}}
-function retal(A,T,rsv){
-  return {note:'Em 27/07/1945 não existe um segundo arsenal nuclear operacional conhecido; portanto, a retaliação nuclear não é quantificada.',a:0,r:0,n:1,fam:0,soot:0,resp:[]};
-}
-function geo(A,T,Tn,An,R){
-  const b=[];
-  if(T==='JPN'){
-    b.push('<b>Japão, 27/07/1945:</b> continua em guerra contra os Aliados; a Declaração de Potsdam (26/07) exige a rendição e ameaça destruição caso ela não ocorra.');
-    b.push('A ordem de 25/07/1945 já autorizava o primeiro emprego da bomba especial, depois de cerca de 3 de agosto, contra Hiroshima, Kokura, Niigata ou Nagasaki.');
-    b.push('A URSS ainda não havia declarado guerra ao Japão. O acordo secreto de Yalta previa entrada soviética na guerra contra o Japão dois ou três meses após a derrota da Alemanha; em 05/04 a URSS havia anunciado que não renovaria o pacto de neutralidade com o Japão.');
-    b.push('A Carta da ONU havia sido assinada em 26/06, mas ainda não estava em vigor.');
-  } else if(T==='USA'){
-    b.push('<b>Estados Unidos, 27/07/1945:</b> único Estado com explosão nuclear realizada e com uso da nova arma em preparação.');
-    b.push('Não há retaliação nuclear de outro Estado a modelar neste recorte.');
-  } else {
-    b.push('<b>Contexto de 27/07/1945:</b> o sistema internacional está em transição para a ordem do pós-guerra.');
-    b.push('Não aplicar OTAN, Guerra Fria, dissuasão nuclear bilateral ou doutrinas nucleares posteriores.');
-  }
-  b.push('A Alemanha havia capitulado em maio; o teatro de guerra ainda ativo era principalmente o Pacífico.');
-  b.push('As consequências físicas e mortes são hipóteses do simulador, não acontecimentos que já tivessem ocorrido em 27/07/1945.');
-  return b
-}
-function ringsList(){const E=fx();return[['Radiação 500 rem',E.rad,'#40e070'],['Bola de fogo',E.fire,'#ffffff'],['Onda 20 psi (destruição total)',E.r20,'#ff3b3b'],['Onda 5 psi (prédios colapsam)',E.r5,'#ff8a3d'],['Queimaduras 3º grau',E.th,'#ffd24a'],['Onda 1 psi (vidros quebram)',E.r1,'#4aa3ff']]}
-function draw(){while(ov.firstChild)ov.removeChild(ov.firstChild);
- const pg=d3.geoPath(proj).pointRadius(5/S.k),o=ovS;
- const add=(g,fill,st,sw,op)=>o.append('path').attr('d',pg(g)).attr('fill',fill).attr('stroke',st).attr('stroke-width',sw).attr('fill-opacity',op).attr('vector-effect','non-scaling-stroke');
- if(S.L&&S.T)add({type:'LineString',coordinates:[S.L.ll,S.T.ll]},'none','#ffcc00',1.5,0).style('stroke-dasharray','6 4');
- const tx=css('--tx'),bg=css('--bg'),k=S.k,cg=o.append('g');
- for(const c of CITIES){const m=c.p/1e6;if(!(m>=5||(m>=1&&k>=3)||k>=10))continue;const q=proj([c.lo,c.la]);
-  cg.append('circle').attr('cx',q[0]).attr('cy',q[1]).attr('r',2.2/k).attr('fill',tx).attr('stroke',bg).attr('stroke-width',.8).attr('vector-effect','non-scaling-stroke');
-  if((m>=10&&k>=1.5)||(m>=3&&k>=4)||(m>=1&&k>=10)||k>=30)cg.append('text').attr('x',q[0]+3.5/k).attr('y',q[1]-3/k).attr('font-size',10/k).attr('fill',tx).attr('stroke',bg).attr('stroke-width',2.5/k).attr('paint-order','stroke').text(c.n)}
- if(S.T){const E=fx();
-  GZ().forEach(gz=>ringsList().sort((a,b)=>b[1]-a[1]).forEach(r=>add(d3.geoCircle().center(gz).radius(r[1]/111.195)(),r[2],r[2],1,.28)));
-  if(E.gnd){const th=(+$('w').value)*RAD,L=E.L,Wd=L*.18,cx=Math.cos(S.T.ll[1]*RAD),pts=[];
-   for(let i=0;i<=40;i++){const t=i/40*2*Math.PI,u=L/2*(1+Math.cos(t)),v=Wd/2*Math.sin(t);
-    pts.push([S.T.ll[0]+(u*Math.sin(th)+v*Math.cos(th))/(111.32*cx),S.T.ll[1]+(u*Math.cos(th)-v*Math.sin(th))/110.57])}
-   add({type:'LineString',coordinates:pts},'#a06bff','#a06bff',1,.2)}
-  add({type:'Point',coordinates:S.T.ll},'#ff2d2d','#fff',1.2,1)}
- if(S.L)add({type:'Point',coordinates:S.L.ll},'#18d0ff','#fff',1.2,1)}
- function save(){try{history.replaceState(null,'','#'+encodeURIComponent(JSON.stringify({L:S.L,T:S.T,y:$('y').value,b:$('bt').value,w:$('w').value,sc:S.scen,pl:$('pl').value,pi:$('pi').value,cv:$('cv').value,rs:$('rs').value,nw:$('nw').value})))}catch(e){}}
-function loadHash(){try{const o=JSON.parse(decodeURIComponent(location.hash.slice(1)));S.L=o.L;S.T=o.T;$('y').value=o.y;$('bt').value=o.b;$('w').value=o.w;$('wl').textContent=o.w;S.scen=o.sc;$('pl').value=o.pl;$('pi').value=o.pi;$('cv').value=o.cv;$('rs').value=o.rs;$('nw').value=o.nw;$('c1').className=S.scen?'on':'';$('c0').className=S.scen?'':'on'}catch(e){}}
-function upd(){
- $('nwl').textContent=$('nw').value;$('pll').textContent=$('pl').value;$('pil').textContent=$('pi').value;$('cvl').textContent=$('cv').value;$('shl').textContent=$('sh').value;save();
- const y=Y();$('yl').textContent='Potência: '+fy(y);
- $('lg').innerHTML=ringsList().map(r=>'<div><i style="background:'+r[2]+'"></i>'+r[0]+': <b>'+(r[1]<1?Math.round(r[1]*1000)+' m':r[1].toFixed(1)+' km')+'</b></div>').join('')+(fx().gnd?'<div><i style="background:#a06bff"></i>Fallout: ~<b>'+Math.round(fx().L)+' km</b> a favor do vento</div>':'');
- $('route').textContent='Origem: '+(S.L?S.L.name:'—')+' | Alvo: '+(S.T?S.T.name:'—');
- draw();
- if(!S.T){$('out').innerHTML='<div class="card mu">Clique no mapa (ou escolha um preset) para definir lançamento e alvo.</div>';return}
- const land=!!S.T.code,B=blast(GZ(),land),A=S.L?S.L.code:null,T=S.T.code,
-  dist=S.L?hav(S.L.ll,S.T.ll):0,tm=S.L?Math.round(5+dist/432):0;
- const med=B.inj*(.55-.35*(DEV[T]||.65)),ind0=B.fall+med,tot0=B.dead+ind0;
- const R=S.scen?retal(A,T):{a:0,r:0,n:1,fam:0,resp:[],note:''};
- const indR=ind0+.3*(R.a+R.r)+R.fam,tot1=B.dead+indR+R.a+R.r;
- const ind=S.scen?indR+R.a+R.r:ind0,tot=S.scen?tot1:tot0;
- let h='<div class="card mu"><b>Snapshot:</b> 27/07/1945. Estimativa contrafactual; Hiroshima e Nagasaki ainda não haviam ocorrido.</div>'+(S.scen&&R.info?'<div class="card mu">'+R.info+'</div>':'')+(S.scen&&R.note?'<div class="card" style="border-color:var(--ac)"><b>A retaliação não muda os números:</b> '+R.note+'</div>':'')+'<div class="card"><div class="mu">'+(S.scen?'Crise internacional':'Sem escalada nuclear')+' — total estimado de mortes</div><div class="big">'+fm(tot)+'</div><div class="mu">faixa plausível: '+fm(tot*.6)+' – '+fm(tot*1.7)+'</div></div>';
- h+='<div class="card"><table><tr><td>Mortes diretas (explosão local)</td><td>'+fm(B.dead)+'</td></tr><tr><td>Feridos graves</td><td>'+fm(B.inj)+'</td></tr><tr><td>Indiretas: sistema de saúde/queimados</td><td>'+fm(med)+'</td></tr>'+(B.E.gnd?'<tr><td>Indiretas: fallout</td><td>'+fm(B.fall)+'</td></tr>':'');
- if(S.scen)h+='<tr><td>Retaliação — mortes no país atacante ('+(A&&NUC[A]?NUC[A][1]:'—')+')</td><td>'+fm(R.a)+'</td></tr><tr><td>Contra-ataque — mortes nos aliados/alvo</td><td>'+fm(R.r)+'</td></tr><tr><td>Fome/inverno nuclear global</td><td>não modelado neste recorte</td></tr><tr><td>Detonações estimadas</td><td>~'+Math.round(R.n)+'</td></tr><tr><td>Fuligem na estratosfera</td><td>~'+R.soot.toFixed(1)+' Tg</td></tr>';
- h+='<tr><td><b>Total direto</b></td><td><b>'+fm(B.dead)+'</b></td></tr><tr><td><b>Total indireto</b></td><td><b>'+fm(ind)+'</b></td></tr><tr><td><b>TOTAL</b></td><td><b>'+fm(tot)+'</b></td></tr></table></div>';
- if(S.L)h+='<div class="mu">Distância: '+Math.round(dist).toLocaleString('pt-BR')+' km · tempo de voo aproximado ≈ '+tm+' min</div>';
- const rr=R.a+R.r,st=[['Dia 1',B.dead+rr*.7],['Semana 1',B.dead+rr*.9+B.fall*.5+med*.4],['Mês 1',B.dead+rr+B.fall*.9+med*.8+R.fam*.05],['Ano 1',tot]];
- h+='<h3>Linha do tempo (acumulado)</h3><div class="card"><table>'+st.map(x=>'<tr><td>'+x[0]+'</td><td>'+fm(x[1])+'</td></tr>').join('')+'</table></div>';
- const pc=c=>NUC[c]?NUC[c][2]:POP[c]||60,cr=[[S.T.name+' (alvo)',B.dead+B.fall+med]];
- if(S.scen&&R.resp.length){const tp=R.resp.reduce((s,c)=>s+pc(c),0);cr.push([(A&&NUC[A]?NUC[A][1]:'Atacante')+' (retaliação)',R.a*1.3]);R.resp.forEach(c=>cr.push([(NUC[c]?NUC[c][1]:c)+' (contra-ataque)',R.r*1.3*pc(c)/tp]));cr.push(['Resto do mundo (fome)',R.fam])}
- const tf=v=>{const q=retal(A,T,v);return B.dead+ind0+.3*(q.a+q.r)+q.fam+q.a+q.r};
- h+='<h3>Árvore de cenários</h3><div class="card"><table>'+[['Sem escalada nuclear',tot0],['Crise limitada',tf(.15)],['Crise ampliada',tf(.5)],['Crise máxima',tf(1)]].map(x=>'<tr><td>'+x[0]+'</td><td>'+fm(x[1])+'</td></tr>').join('')+'</table></div>';
- h+='<h3>Mortes por país</h3><div class="card"><table>'+cr.map(x=>'<tr><td>'+x[0]+'</td><td>'+fm(x[1])+'</td></tr>').join('')+'</table></div>';
- h+='<h3>Consequências geopolíticas</h3><ul>'+geo(A,T,S.T.name,S.L?S.L.name:'',R).map(x=>'<li>'+x+'</li>').join('')+'</ul>';
- $('out').innerHTML=h}
-window.addEventListener('resize',()=>{});
-['nw','pl','pi','cv','rs','sh'].forEach(i=>$(i).oninput=upd);
-$('cp').onclick=()=>{save();if(navigator.clipboard)navigator.clipboard.writeText(location.href);$('cp').textContent='✔ Copiado'};
-fetch('cities.csv').then(r=>r.ok?r.text():Promise.reject()).then(t=>{const L=t.split(/\r?\n/),hd=L[0].replace(/"/g,'').split(','),ci=hd.indexOf('city'),la=hd.indexOf('lat'),lo=hd.indexOf('lng'),pp=hd.indexOf('population'),o=[];
- for(let i=1;i<L.length;i++){const f=L[i].slice(1,-1).split('","'),p=+f[pp];if(p>=50000)o.push({n:f[ci],la:+f[la],lo:+f[lo],p:p,s:7*Math.pow(p/1e6,.35)})}
- if(o.length>500){CITIES=o;upd()}}).catch(()=>{});
-loadHash();upd();
-})();
-</script></body></html>
+<div class="method">
+<div class="methodtop"><label class="check"><input type="checkbox" id="onDiplomacy" checked> <b>Negociação e garantias</b></label><span class="tag">direto: sem estimativa de mortes</span></div>
+<div class="formgrid"><label>Intensidade <output id="diplomacyOut">80%</output><input type="range" id="diplomacy" min="0" max="100" value="80"></label><label>Verba por mês ($)<input type="number" id="diplomacyCost" min="0" step="10000" value="250000"></label></div>
+<p class="muted">Clarificar os termos de Potsdam, abrir canais diplomáticos e considerar garantias negociadas.</p>
+</div>
+<div class="method">
+<div class="methodtop"><label class="check"><input type="checkbox" id="onNaval" checked> <b>Bloqueio naval</b></label><span class="tag warning">mortes indiretas incertas</span></div>
+<div class="formgrid"><label>Intensidade <output id="navalOut">35%</output><input type="range" id="naval" min="0" max="100" value="35"></label><label>Custo por mês ($)<input type="number" id="navalCost" min="0" step="100000" value="1000000"></label></div>
+<p class="muted">Interrupção de importações e transporte marítimo. Pode reduzir suprimentos militares e também agravar a escassez civil.</p>
+</div>
+<div class="method">
+<div class="methodtop"><label class="check"><input type="checkbox" id="onAir" checked> <b>Interdição aérea / mineração</b></label><span class="tag warning">mortes indiretas incertas</span></div>
+<div class="formgrid"><label>Intensidade <output id="airOut">25%</output><input type="range" id="air" min="0" max="100" value="25"></label><label>Custo por mês ($)<input type="number" id="airCost" min="0" step="100000" value="800000"></label></div>
+<p class="muted">Pressão sobre rotas e logística. Não é possível derivar mortes civis confiáveis apenas da intensidade escolhida.</p>
+</div>
+<div class="method">
+<div class="methodtop"><label class="check"><input type="checkbox" id="onInvasion"> <b>Invasão terrestre (Downfall)</b></label><span class="tag danger">projeção militar de 1945</span></div>
+<div class="formgrid"><label>Escala da operação <output id="invasionOut">100%</output><input type="range" id="invasion" min="0" max="100" value="100"></label><label>Custo extra no cenário ($)<input type="number" id="invasionCost" min="0" step="1000000" value="0"></label></div>
+<p class="muted">A faixa de mortes abaixo é a estimativa de planejamento para a operação completa. A faixa de mortes refere-se à operação completa; a estimativa não cresce de forma necessariamente proporcional à escala.</p>
+</div>
+</section>
+</div>
+
+<aside class="sidecol">
+<section class="box sticky">
+<h2>3. Resultado do cenário</h2>
+<div class="stat"><small>Custo total estimado</small><strong id="totalCost">$ 5.000.000</strong></div>
+<div class="stat"><small>Índice de pressão logística</small><strong id="logistics">— / 100</strong><div class="bar"><i id="logBar"></i></div></div>
+<div class="stat"><small>Ênfase diplomática e informativa</small><strong id="peace">— / 100</strong><div class="bar"><i id="peaceBar"></i></div></div>
+<hr>
+<h3>Mortes — população japonesa</h3>
+<div class="death"><small>Medidas selecionadas, sem invasão</small><strong class="unknown">Não quantificável com rigor</strong><p id="japanNote">Bloqueios e ataques podem gerar mortes diretas e indiretas; não há taxa confiável por intensidade para este cálculo.</p></div>
+<div class="death"><small>Se ocorrer a invasão completa</small><strong id="japanDeaths">5–10 milhões</strong><p>Estimativa do Departamento de Guerra no fim de julho de 1945 para a operação Downfall completa.</p></div>
+<h3>Mortes — soldados americanos</h3>
+<div class="death"><small>Medidas selecionadas, sem invasão</small><strong class="unknown">Não há total comparável por intensidade</strong><p>Referência histórica: a Operação Starvation perdeu 103 tripulantes aéreos americanos durante a campanha de mineração de 1945; esse total não pode ser atribuído ao nível escolhido no controle.</p></div>
+<div class="death"><small>Se ocorrer a invasão completa</small><strong id="usDeaths">400–800 mil</strong><p>Estimativa do Departamento de Guerra no fim de julho de 1945 para a operação Downfall completa; outras projeções variavam.</p></div>
+<div class="notice smallnotice" id="warning">Sem invasão selecionada: não há base para converter as medidas escolhidas em um total confiável de mortes.</div>
+<button class="full" id="export">Exportar relatório .txt</button>
+</section>
+</aside>
+</section>
+
+
+<section class="box mapbox">
+<h2>4. Mapa operacional — atualizado pelas escolhas</h2>
+<p class="muted">O mapa destaca as zonas e os movimentos correspondentes às medidas ativadas. As setas e áreas são esquemáticas.</p>
+<div class="maplegend">
+<span><i class="dot navaldot"></i> Bloqueio naval</span><span><i class="dot airdot"></i> Interdição aérea</span><span><i class="dot landdot"></i> Invasão terrestre</span><span><i class="dot dipdot"></i> Canal diplomático</span>
+</div>
+<div class="mapwrap">
+<svg id="operationMap" viewBox="0 0 900 440" role="img" aria-label="Mapa esquemático do Pacífico entre os Estados Unidos e o Japão">
+ <defs>
+  <pattern id="seaGrid" width="32" height="32" patternUnits="userSpaceOnUse"><path d="M32 0H0V32" fill="none" stroke="#d7e3e8" stroke-width="0.7"/></pattern>
+  <marker id="arrowAir" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#397da5"/></marker>
+  <marker id="arrowLand" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#c35d49"/></marker>
+ </defs>
+ <rect width="900" height="440" rx="5" fill="#eaf2f5"/><rect width="900" height="440" fill="url(#seaGrid)"/>
+ <text x="450" y="28" text-anchor="middle" font-size="13" fill="#5e7783" letter-spacing="3">OCEANO PACÍFICO</text>
+ <!-- schematic continents -->
+ <path d="M0 0H205L225 28 203 54 226 79 205 105 214 128 194 151 207 171 185 195 161 207 149 233 123 246 104 275 79 285 63 310 42 319 26 348 0 359Z" fill="#c8d7c8" stroke="#90a99a" stroke-width="1.5"/>
+ <path d="M0 352L28 343 54 357 70 384 88 398 96 440H0Z" fill="#c8d7c8" stroke="#90a99a"/>
+ <text x="75" y="180" font-size="17" fill="#415b50" font-weight="700">AMÉRICA</text><text x="75" y="200" font-size="12" fill="#415b50">EUA</text>
+ <path d="M720 50l17 8 7 16-12 10-12-11z M744 88l18 10 7 19-10 14-14-8-8-18z M755 143l10 4 7 14-10 12-10-10z M732 188l15 4 5 13-11 9-10-11z" fill="#c8d7c8" stroke="#90a99a" stroke-width="1.5"/>
+ <path d="M690 111l9 3 4 9-6 7-9-6z M704 142l7 5 2 9-7 3-5-9z" fill="#c8d7c8" stroke="#90a99a"/>
+ <text x="735" y="240" text-anchor="middle" font-size="18" fill="#415b50" font-weight="700">JAPÃO</text>
+ <text x="735" y="257" text-anchor="middle" font-size="11" fill="#415b50">Ilhas principais</text>
+ <g id="navalLayer" style="display:none">
+  <ellipse cx="735" cy="142" rx="95" ry="86" fill="#d5a23c" fill-opacity=".12" stroke="#c18b23" stroke-width="3" stroke-dasharray="8 6"/>
+  <text x="824" y="104" font-size="11" fill="#93640f" text-anchor="middle">Bloqueio</text>
+  <text x="824" y="118" font-size="11" fill="#93640f" text-anchor="middle">naval</text>
+ </g>
+ <g id="airLayer" style="display:none">
+  <path d="M145 130 Q420 15 697 115" fill="none" stroke="#397da5" stroke-width="3" stroke-dasharray="7 5" marker-end="url(#arrowAir)"/>
+  <path d="M260 230 Q480 305 700 175" fill="none" stroke="#397da5" stroke-width="2" stroke-dasharray="7 5" marker-end="url(#arrowAir)"/>
+  <circle cx="715" cy="143" r="60" fill="#397da5" fill-opacity=".10" stroke="#397da5" stroke-dasharray="4 5" stroke-width="2"/>
+  <text x="420" y="75" font-size="11" fill="#286486">Rotas aéreas / mineração</text>
+ </g>
+ <g id="landLayer" style="display:none">
+  <path d="M695 314 Q735 260 740 202" fill="none" stroke="#c35d49" stroke-width="4" marker-end="url(#arrowLand)"/>
+  <path d="M780 320 Q766 260 751 203" fill="none" stroke="#c35d49" stroke-width="3" marker-end="url(#arrowLand)"/>
+  <text x="742" y="345" text-anchor="middle" font-size="12" fill="#a33f31" font-weight="700">Força de invasão</text>
+ </g>
+ <g id="diplomacyLayer">
+  <path d="M155 275 Q430 375 700 285" fill="none" stroke="#27806c" stroke-width="2" stroke-dasharray="3 6"/>
+  <rect x="355" y="347" width="190" height="26" rx="4" fill="#e1f1eb" stroke="#8dbfae"/>
+  <text x="450" y="364" text-anchor="middle" font-size="11" fill="#226b58">Canal diplomático</text>
+ </g>
+ <g transform="translate(30 390)"><rect width="280" height="32" rx="4" fill="#fff" stroke="#ccd8dd"/><text id="mapStatus" x="12" y="20" font-size="12" fill="#344b56">Medidas ativas: rádio, diplomacia, naval e aérea</text></g>
+</svg>
+</div>
+<div class="mapstats"><div><small>Forças americanas previstas para Downfall</small><b>aprox. 1,7–1,79 milhão de militares</b></div><div><small>Fase inicial prevista</small><b>Operação Olympic — Kyushu, nov. 1945</b></div><div><small>Fase seguinte planejada</small><b>Operação Coronet — Honshu, primavera de 1946</b></div></div>
+</section>
+
+<section class="box sources">
+<h2>5. Fontes históricas</h2>
+<ol>
+<li><b>U.S. Naval History and Heritage Command — Operations Downfall and Ketsugo.</b> Resume estimativas militares de julho de 1945 para a invasão: 400–800 mil mortes americanas e 5–10 milhões de mortes japonesas para Downfall completa. Publicado retrospectivamente em 2021; explica que estimativas eram debatidas. <a href="https://www.history.navy.mil/about-us/leadership/director/directors-corner/h-grams/h-gram-057/h-057-1.html" target="_blank" rel="noopener">Fonte</a>.</li>
+<li><b>Operação Starvation — mortes de tripulantes americanos.</b> O histórico da Marinha registra perda de 15 B-29 e 103 tripulantes durante a campanha de mineração aérea. Esse é um total histórico da campanha, não uma taxa por intensidade. <a href="https://www.history.navy.mil/about-us/leadership/director/directors-corner/h-grams/h-gram-053/h-053-1.html" target="_blank" rel="noopener">Fonte</a>.</li>\n<li><b>Foreign Relations of the United States — documento de planejamento de 1945.</b> Registra estimativas e comparações de campanhas anteriores, incluindo Okinawa. <a href="https://history.state.gov/historicaldocuments/frus1945Berlinv01/d598" target="_blank" rel="noopener">Fonte diplomática oficial</a>.</li>
+<li><b>Declaração de Potsdam, 26/07/1945.</b> Termos aliados apresentados ao Japão antes da data do cenário. <a href="https://www.presidency.ucsb.edu/documents/proclamation-the-heads-governments-united-states-china-and-the-united-kingdom" target="_blank" rel="noopener">Texto</a>.</li>
+<li><b>U.S. Naval History — Operação Starvation.</b> Contexto histórico de mineração aérea e bloqueio marítimo. Não fornece uma taxa de mortes que possa ser aplicada aos controles deste simulador. <a href="https://www.history.navy.mil/about-us/leadership/director/directors-corner/h-grams/h-gram-053/h-053-1.html" target="_blank" rel="noopener">Estudo</a>.</li>
+</ol>
+<p class="muted">O cenário começa em 27/07/1945. Os custos por mês são editáveis no painel. Os índices de logística e diplomacia resumem as intensidades escolhidas. As estimativas de mortes de Downfall são projeções de planejamento militar, não resultados ocorridos. A faixa se refere à operação completa; o controle de escala não deve ser lido como previsão proporcional.</p>
+</section>
+</main>
+<footer>Simulador educacional • Não confundir projeção, hipótese e resultado histórico.</footer>
+<script src="script.js"></script>
+</body></html>
