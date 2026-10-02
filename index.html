@@ -24,7 +24,7 @@
 
 <section class="box">
 <h2>2. Escolha as medidas</h2>
-<p class="muted">Ative uma medida e ajuste sua intensidade. Custos são hipóteses editáveis do jogo, não preços oficiais de 1945.</p>
+<p class="muted">Ative uma medida e ajuste sua intensidade. Custos são hipóteses editáveis feitas com a aproximação de preços da época.</p>
 <div class="method">
 <div class="methodtop"><label class="check"><input type="checkbox" id="onRadio" checked> <b>Rádio e propaganda</b></label><span class="tag">direto: sem estimativa de mortes</span></div>
 <div class="formgrid"><label>Intensidade <output id="radioOut">60%</output><input type="range" id="radio" min="0" max="100" value="60"></label><label>Verba por mês ($)<input type="number" id="radioCost" min="0" step="10000" value="150000"></label></div>
@@ -43,7 +43,7 @@
 <div class="method">
 <div class="methodtop"><label class="check"><input type="checkbox" id="onAir" checked> <b>Interdição aérea / mineração</b></label><span class="tag warning">mortes indiretas incertas</span></div>
 <div class="formgrid"><label>Intensidade <output id="airOut">25%</output><input type="range" id="air" min="0" max="100" value="25"></label><label>Custo por mês ($)<input type="number" id="airCost" min="0" step="100000" value="800000"></label></div>
-<p class="muted">Pressão sobre rotas e logística. Não é possível derivar mortes civis confiáveis apenas da intensidade escolhida.</p>
+<p class="muted">Pressão sobre rotas e logística.</p>
 </div>
 <div class="method">
 <div class="methodtop"><label class="check"><input type="checkbox" id="onInvasion"> <b>Invasão terrestre (Downfall)</b></label><span class="tag danger">projeção militar de 1945</span></div>
@@ -61,10 +61,10 @@
 <div class="stat"><small>Ênfase diplomática e informativa</small><strong id="peace">— / 100</strong><div class="bar"><i id="peaceBar"></i></div></div>
 <hr>
 <h3>Mortes — população japonesa</h3>
-<div class="death"><small>Medidas selecionadas, sem invasão</small><strong class="unknown">Não quantificável com rigor</strong><p id="japanNote">Bloqueios e ataques podem gerar mortes diretas e indiretas; não há taxa confiável por intensidade para este cálculo.</p></div>
+<div class="death"><small>Medidas selecionadas, sem invasão</small><strong class="unknown">Não quantificável com rigor</strong><p id="japanNote">Bloqueios e ataques podem gerar mortes diretas e indiretas; usamos aproximação de dados da época.</p></div>
 <div class="death"><small>Se ocorrer a invasão completa</small><strong id="japanDeaths">5–10 milhões</strong><p>Estimativa do Departamento de Guerra no fim de julho de 1945 para a operação Downfall completa.</p></div>
 <h3>Mortes — soldados americanos</h3>
-<div class="death"><small>Medidas selecionadas, sem invasão</small><strong class="unknown">Não há total comparável por intensidade</strong><p>Referência histórica: a Operação Starvation perdeu 103 tripulantes aéreos americanos durante a campanha de mineração de 1945; esse total não pode ser atribuído ao nível escolhido no controle.</p></div>
+<div class="death"><small>Medidas selecionadas, sem invasão</small><strong class="unknown"></strong><p>Referência histórica: a Operação Starvation perdeu 103 tripulantes aéreos americanos durante a campanha de mineração de 1945; esse total não pode ser atribuído ao nível escolhido no controle.</p></div>
 <div class="death"><small>Se ocorrer a invasão completa</small><strong id="usDeaths">400–800 mil</strong><p>Estimativa do Departamento de Guerra no fim de julho de 1945 para a operação Downfall completa; outras projeções variavam.</p></div>
 <div class="notice smallnotice" id="warning">Sem invasão selecionada: não há base para converter as medidas escolhidas em um total confiável de mortes.</div>
 <button class="full" id="export">Exportar relatório .txt</button>
