@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="pt-BR"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Simulador de Detonação Nuclear</title>
+<title>Simulador Nuclear — 27/07/1945</title>
 <style>
 :root{--bg:#f3f5f8;--pn:#fff;--tx:#14202e;--mu:#5d6b7c;--ln:#cbd5e1;--land:#dfe7ef;--sea:#bcd3e6;--bd:#6b829a;--ac:#d62d20;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b1118;--pn:#131c27;--tx:#e6edf5;--mu:#8fa0b3;--ln:#263545;--land:#1d2b3a;--sea:#0b1622;--bd:#4d6a88}}
@@ -28,38 +28,38 @@ ul{padding-left:18px;margin:4px 0}
 <div id="app">
 <div id="side">
 <h1>☢️ Simulador de Detonação Nuclear</h1>
-<h3>1. Lançamento e alvo (clique no mapa)</h3>
-<div class="row"><button id="mL" class="on">📍 Definir lançamento</button><button id="mT">🎯 Definir alvo</button></div>
-<div class="row"><select id="pL"><option value="">Lançamento rápido…</option></select><select id="pT"><option value="">Alvo rápido…</option></select></div>
+<div class="mu">Ferramenta educacional. Modelo simplificado com alta incerteza — não são dados oficiais.</div>
+<h3>1. Origem e alvo (clique no mapa)</h3>
+<div class="row"><button id="mL" class="on">📍 Definir origem</button><button id="mT">🎯 Definir alvo</button></div>
+<div class="row"><select id="pL"><option value="">Origem histórica…</option></select><select id="pT"><option value="">Alvo rápido…</option></select></div>
 <div class="row"><button id="zoomT">🔍 Aproximar do alvo</button><button id="zoom0">🌍 Mundo</button></div>
-<div class="mu" id="route">Lançamento: — | Alvo: —</div>
-<h3>2. Bomba</h3>
+<div class="mu" id="route">Origem: — | Alvo: —</div>
+<h3>2. Arma e potência</h3>
 <div class="row"><select id="pr"></select></div>
 <div id="yl" class="mu"></div><input id="y" type="range" min="0" max="5" step="0.01" value="2.18">
-<div class="row"><select id="bt"><option value="air">Explosão aérea (máx. dano de onda)</option><option value="gnd">Explosão em solo (gera fallout)</option></select></div>
+<div class="row"><select id="bt"><option value="air">Explosão aérea (cenário)</option><option value="gnd">Explosão em solo (gera fallout)</option></select></div>
 <div class="mu">Direção do vento (fallout): <span id="wl">90</span>° (0=N, 90=L)</div><input id="w" type="range" min="0" max="359" value="90">
 <h3>3. Cenário</h3>
-<div class="row"><button id="c0" class="on">Sem retaliação</button><button id="c1">Com retaliação</button></div>
+<div class="row"><button id="c0" class="on">Sem escalada nuclear</button><button id="c1">Crise internacional</button></div>
 <div class="card"><div class="mu"><b>Parâmetros avançados</b></div>
-<div class="mu">Ogivas no alvo (ataque múltiplo): <b id="nwl">1</b></div><input id="nw" type="range" min="1" max="12" value="1">
-<div class="mu">% do arsenal lançado: <b id="pll">60</b>%</div><input id="pl" type="range" min="0" max="100" value="60">
+<div class="mu">Bombas no alvo (hipótese contrafactual): <b id="nwl">1</b></div><input id="nw" type="range" min="1" max="12" value="1">
+<div class="mu">% do armamento empregado: <b id="pll">60</b>%</div><input id="pl" type="range" min="0" max="100" value="60">
 <div class="mu">% interceptado: <b id="pil">25</b>%</div><input id="pi" type="range" min="0" max="100" value="25">
-<div class="mu">% das ogivas contra cidades (resto: alvos militares): <b id="cvl">50</b>%</div><input id="cv" type="range" min="0" max="100" value="50">
+<div class="mu">% das bombas contra cidades (resto: alvos militares): <b id="cvl">50</b>%</div><input id="cv" type="range" min="0" max="100" value="50">
 <div class="mu">% da população abrigada contra fallout: <b id="shl">30</b>%</div><input id="sh" type="range" min="0" max="100" value="30">
-<div class="row"><select id="rs"><option value="0.15">Resposta limitada</option><option value="0.5">Resposta proporcional</option><option value="1" selected>Escalada total</option></select><button id="cp">🔗 Copiar link</button></div></div>
+<div class="row"><select id="rs"><option value="0.15">Crise limitada</option><option value="0.5">Crise ampliada</option><option value="1" selected>Crise máxima</option></select><button id="cp">🔗 Copiar link</button></div></div>
 <div id="out"></div>
 <h3>Raios dos efeitos</h3><div class="lg" id="lg"></div>
-<details class="card"><summary><b>Fontes e premissas</b></summary><ul class="mu">
-<li><b>Efeitos da explosão:</b> leis de escala de Glasstone &amp; Dolan, <i>The Effects of Nuclear Weapons</i> (US DoD/ERDA, 3ª ed., 1977); coeficientes aproximados por mim e conferidos por ordem de grandeza com o NUKEMAP (A. Wellerstein, nuclearsecrecy.com/nukemap).</li>
-<li><b>Letalidade por zona (98%/60%/25%…):</b> suposição minha, calibrada por ordem de grandeza com Hiroshima (~70–80 mil mortes imediatas) e Nagasaki (~35–40 mil), números históricos amplamente citados (Manhattan Engineer District, 1946; RERF). Tempestade de fogo: acima de 100 kt a letalidade térmica sobe de 25% para 40% (suposição).</li>
-<li><b>Arsenais:</b> Federation of American Scientists, <i>Status of World Nuclear Forces 2026</i> (Kristensen, Korda et al.), fas.org/initiative/status-world-nuclear-forces: Rússia 4.400, EUA ~3.700, China ~600 (estoque militar). Demais países: FAS 2025, arredondados. Potência média por ogiva: suposição minha.</li>
-<li><b>Fuligem e fome:</b> Xia et al., <i>Nature Food</i> 3 (2022): ~5 Tg de fuligem → &gt;2 bilhões de mortes por fome; ~150 Tg → &gt;5 bilhões. Interpolação logarítmica minha; 0,045 Tg por ogiva em cidade, ajustada a Toon et al., <i>Science Advances</i> 5 (2019).</li>
-<li><b>Retaliação:</b> cidades do país atacado modeladas por lei de Zipf (60% de população urbana, ordem de grandeza da ONU/WUP); ogivas "contraforça" matam ~20 mil cada (suposição). Não há lista de alvos militares reais.</li>
-<li><b>Mortes indiretas:</b> feridos graves × (0,55 − 0,35 × IDH, UNDP) como proxy de capacidade hospitalar (suposição). Fallout: elipse a favor do vento, reduzida pelo abrigo escolhido.</li>
-<li><b>População:</b> ~300 cidades com populações metropolitanas aproximadas, digitadas por mim (ordem de grandeza; não extraídas automaticamente) + densidade rural de 25/km². Opcional: <code>cities.csv</code> (SimpleMaps/GeoNames).</li>
-<li><b>Mapa:</b> Natural Earth via <i>world-atlas</i> (M. Bostock) ou <i>johan/world.geo.json</i>.</li>
-<li><b>Alianças/doutrinas:</b> Tratado de Washington (OTAN, art. 5, 1949); Tratado EUA–Japão (1960); declarações oficiais de China e Índia (não usar primeiro).</li>
-<li>Só os arsenais foram conferidos em fonte online nesta sessão; o resto vem de literatura conhecida e de suposições assumidas. Resultados são estimativas educacionais.</li></ul></details>
+<details class="card"><summary><b>Fontes e premissas — corte em 27/07/1945</b></summary><ul class="mu">
+<li><b>Data de corte:</b> fatos posteriores a 27/07/1945 não são usados para descrever o contexto.</li>
+<li><b>Arma atômica:</b> Trinity foi testado em 16/07/1945. Registros contemporâneos mostram que o governo dos EUA conhecia o sucesso do teste e preparava o emprego da nova arma.</li>
+<li><b>Ordem de 25/07/1945:</b> autorizava o 509th Composite Group a entregar a primeira “special bomb” depois de cerca de 3 de agosto contra Hiroshima, Kokura, Niigata ou Nagasaki; também previa bombas adicionais quando prontas.</li>
+<li><b>Mortes:</b> o simulador não usa Hiroshima/Nagasaki como calibração histórica, pois ainda não haviam ocorrido. As mortes são estimativas hipotéticas a partir de população histórica e zonas físicas simplificadas.</li>
+<li><b>População:</b> o conjunto reduzido usa dados históricos: Censo dos EUA de 1940 (publicado em 1942), Censo japonês de 1940 e Censo soviético de 1939. Onde não há dado histórico suficientemente confiável no recorte, a cidade não é usada.</li>
+<li><b>Geopolítica:</b> Declaração de Potsdam (26/07/1945); Acordo de Yalta sobre o Japão (11/02/1945); denúncia soviética do Pacto de Neutralidade (05/04/1945); Carta da ONU (26/06/1945, ainda não em vigor).</li>
+<li><b>Não usar:</b> OTAN (1949), tratado EUA–Japão (1960), arsenais nucleares modernos, ICBMs, NUKEMAP, FAS moderna ou estudos posteriores de inverno nuclear.</li>
+<li><b>Fontes primárias:</b> documentos de 1941–1945 preservados em arquivos nacionais; a página web atual é apenas o meio de acesso. O conteúdo documental é contemporâneo ao recorte.</li>
+</ul></details>
 </div>
 <div id="mapw"><div id="hint">Carregando mapa…</div><div id="map"></div></div>
 </div>
@@ -73,19 +73,18 @@ if(typeof d3==='undefined'){document.getElementById('map').innerHTML='<div id="e
 const $=id=>document.getElementById(id),RAD=Math.PI/180,ER=6371;
 const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 // [warheads estoque, nome, população mi]
-const NUC={USA:[3700,'EUA',335],RUS:[4400,'Rússia',144],CHN:[600,'China',1410],FRA:[290,'França',66],GBR:[225,'Reino Unido',68],IND:[180,'Índia',1430],PAK:[170,'Paquistão',245],ISR:[90,'Israel',9.5],PRK:[50,'Coreia do Norte',26]};
-const POP={JPN:124,KOR:52,DEU:84,CAN:40,ITA:59,ESP:48,POL:38,TUR:85,AUS:26,TWN:23,BLR:9,UKR:38,IRN:89};
+const NUC={USA:[1,'EUA',132.165129]}; // Trinity testado; não representa um estoque moderno
+const POP={JPN:73.114308,KOR:25,DEU:69.3,CAN:11.4,ITA:44.5,ESP:26,POL:24,TUR:18,AUS:7,TWN:5.9,BLR:9.2,UKR:40,IRN:15,CHN:517};
 const UMB={JPN:['USA'],KOR:['USA'],AUS:['USA'],TWN:['USA'],BLR:['RUS']};
 'DEU ITA ESP POL TUR NLD BEL NOR DNK PRT GRC CZE ROU HUN BGR HRV SVK SVN LTU LVA EST ALB ISL LUX CAN FIN SWE'.split(' ').forEach(c=>UMB[c]=['USA','GBR','FRA']);
-const AY={USA:150,RUS:250,CHN:300,FRA:100,GBR:100,IND:50,PAK:30,ISR:100,PRK:50};
-const DEV={USA:.92,JPN:.92,RUS:.82,CHN:.78,GBR:.94,FRA:.91,DEU:.95,KOR:.93,IND:.64,PAK:.54,IRN:.78,PRK:.5};
-let CITIES='Tóquio,35.7,139.7,37;Osaka,34.7,135.5,19;Nagoia,35.2,136.9,9;Pequim,39.9,116.4,21.5;Xangai,31.2,121.5,25;Cantão,23.1,113.3,18;Shenzhen,22.5,114.1,17.5;Chongqing,29.6,106.5,16;Chengdu,30.7,104.1,16;Wuhan,30.6,114.3,11;Hong Kong,22.3,114.2,7.5;Moscou,55.75,37.6,12.6;S. Petersburgo,59.9,30.3,5.6;Novosibirsk,55,82.9,1.6;Yekaterinburg,56.8,60.6,1.5;Vladivostok,43.1,131.9,.6;Nova York,40.7,-74,18.8;Los Angeles,34.05,-118.2,12.5;Chicago,41.9,-87.6,8.9;Washington,38.9,-77,6.3;Houston,29.8,-95.4,7;São Francisco,37.8,-122.4,4.7;Seattle,47.6,-122.3,4;Dallas,32.8,-96.8,7.5;Miami,25.8,-80.2,6.1;Atlanta,33.7,-84.4,6.1;Londres,51.5,-.1,9.5;Paris,48.9,2.35,11;Berlim,52.5,13.4,3.7;Madri,40.4,-3.7,6.7;Roma,41.9,12.5,4.3;Istambul,41,29,15.5;Délhi,28.6,77.2,32;Mumbai,19.1,72.9,21;Calcutá,22.6,88.4,15;Bangalore,13,77.6,13;Karachi,24.9,67,16;Teerã,35.7,51.4,9;Cairo,30,31.2,22;Lagos,6.5,3.4,15;Kinshasa,-4.3,15.3,15;Joanesburgo,-26.2,28,6;Nairóbi,-1.3,36.8,5;São Paulo,-23.55,-46.6,22;Rio,-22.9,-43.2,13;Buenos Aires,-34.6,-58.4,15;Lima,-12,-77,11;Bogotá,4.7,-74.1,11;Cidade do México,19.4,-99.1,22;Toronto,43.7,-79.4,6.4;Seul,37.6,127,10;Pyongyang,39,125.7,3;Taipei,25,121.5,7;Manila,14.6,121,14;Jacarta,-6.2,106.8,11;Bangkok,13.75,100.5,11;Sydney,-33.9,151.2,5.3;Tel Aviv,32.1,34.8,4;Hiroshima,34.4,132.5,1.2;Filadélfia,39.95,-75.17,6.2;Phoenix,33.45,-112.07,5;Boston,42.36,-71.06,4.9;Detroit,42.33,-83.05,4.3;Minneapolis,44.98,-93.27,3.7;San Diego,32.72,-117.16,3.3;Tampa,27.95,-82.46,3.2;Denver,39.74,-104.99,3;St. Louis,38.63,-90.2,2.8;Baltimore,39.29,-76.61,2.8;Orlando,28.54,-81.38,2.7;Charlotte,35.23,-80.84,2.7;San Antonio,29.42,-98.49,2.6;Portland,45.52,-122.68,2.5;Sacramento,38.58,-121.49,2.4;Pittsburgh,40.44,-79.99,2.3;Austin,30.27,-97.74,2.4;Las Vegas,36.17,-115.14,2.3;Cincinnati,39.1,-84.51,2.2;Kansas City,39.1,-94.58,2.2;Columbus,39.96,-83,2.1;Indianápolis,39.77,-86.16,2.1;Cleveland,41.5,-81.69,2.1;Nashville,36.16,-86.78,2;San José,37.34,-121.89,2;Virginia Beach,36.85,-75.98,1.8;Providence,41.82,-71.41,1.7;Milwaukee,43.04,-87.91,1.6;Jacksonville,30.33,-81.66,1.6;Raleigh,35.78,-78.64,1.5;Oklahoma City,35.47,-97.52,1.4;Memphis,35.15,-90.05,1.3;Richmond,37.54,-77.44,1.3;Louisville,38.25,-85.76,1.3;Salt Lake City,40.76,-111.89,1.3;Nova Orleans,29.95,-90.07,1.3;Hartford,41.76,-72.67,1.2;Birmingham,33.52,-86.8,1.1;Buffalo,42.89,-78.88,1.1;Honolulu,21.31,-157.86,1;Tucson,32.22,-110.97,1;Fresno,36.74,-119.79,1;Tulsa,36.15,-95.99,1;Omaha,41.26,-95.93,.97;Albuquerque,35.08,-106.65,.9;Albany,42.65,-73.76,.9;Knoxville,35.96,-83.92,.9;El Paso,31.76,-106.49,.87;Baton Rouge,30.45,-91.15,.87;Boise,43.62,-116.2,.8;Charleston,32.78,-79.93,.8;Little Rock,34.75,-92.29,.75;Des Moines,41.59,-93.62,.7;Madison,43.07,-89.4,.67;Wichita,37.69,-97.34,.65;Spokane,47.66,-117.43,.55;Anchorage,61.22,-149.9,.4;Fargo,46.88,-96.79,.25;Billings,45.78,-108.5,.18;Cheyenne,41.14,-104.82,.1;Great Falls,47.5,-111.3,.08;Minot,48.23,-101.3,.07;Tianjin,39.34,117.36,14;Xian,34.34,108.94,13;Zhengzhou,34.75,113.62,13;Hangzhou,30.27,120.16,12;Suzhou,31.3,120.58,12;Shijiazhuang,38.04,114.51,11;Baoding,38.87,115.46,11;Linyi,35.1,118.35,11;Dongguan,23.02,113.75,10;Changsha,28.23,112.94,10;Qingdao,36.07,120.38,10;Foshan,23.02,113.12,9.5;Nanjing,32.06,118.8,9.5;Ningbo,29.87,121.55,9.4;Hefei,31.82,117.23,9.4;Wenzhou,28,120.67,9.6;Shenyang,41.8,123.43,9;Jinan,36.65,117,9;Handan,36.6,114.5,9;Xuzhou,34.2,117.28,9;Changchun,43.82,125.32,9;Nanning,22.82,108.37,8.7;Kunming,25.04,102.71,8.5;Fuzhou,26.07,119.3,8.3;Tangshan,39.63,118.18,7.7;Nantong,31.98,120.89,7.7;Dalian,38.91,121.6,7.5;Wuxi,31.49,120.31,7.5;Yantai,37.46,121.45,7;Luoyang,34.62,112.45,7;Weifang,36.7,119.1,9;Nanchang,28.68,115.86,6.4;Harbin,45.8,126.53,6;Huizhou,23.11,114.42,6;Guiyang,26.65,106.63,6;Taiyuan,37.87,112.55,5.3;Changzhou,31.81,119.97,5.3;Xiamen,24.48,118.09,5.2;Mianyang,31.47,104.68,4.9;Zibo,36.8,118.05,4.7;Lanzhou,36.06,103.83,4.4;Zhongshan,22.52,113.39,4.4;Jilin,43.84,126.55,4.3;Ürümqi,43.83,87.62,4;Anshan,41.1,122.99,3.3;Hohhot,40.84,111.75,3.5;Datong,40.08,113.3,3.1;Baotou,40.66,109.84,2.9;Yinchuan,38.49,106.23,2.9;Haikou,20.04,110.2,2.9;Xining,36.62,101.78,2.5;Zhuhai,22.27,113.58,2.5;Panzhihua,26.58,101.72,1.2;Lhasa,29.65,91.1,.9;Korla,41.76,86.15,.6;Kazan,55.8,49.1,1.3;Níjni Novgorod,56.33,44,1.25;Cheliabinsk,55.16,61.4,1.2;Samara,53.2,50.15,1.15;Omsk,54.99,73.37,1.1;Rostov,47.23,39.7,1.14;Ufá,54.74,55.97,1.13;Krasnoyarsk,56.01,92.85,1.1;Voronej,51.67,39.18,1.06;Perm,58,56.23,1;Volgogrado,48.71,44.51,1;Krasnodar,45.04,38.98,1;Tiumen,57.15,65.53,.85;Saratov,51.53,46.03,.84;Togliatti,53.5,49.4,.7;Izhevsk,56.85,53.2,.65;Barnaul,53.35,83.77,.63;Irkutsk,52.29,104.3,.62;Khabarovsk,48.48,135.08,.62;Uliânovsk,54.32,48.4,.6;Iaroslavl,57.63,39.87,.6;Makhachkala,42.98,47.5,.6;Tomsk,56.5,84.97,.57;Orenburg,51.77,55.1,.57;Kemerovo,55.35,86.09,.55;Novokuznetsk,53.76,87.1,.55;Riazan,54.63,39.74,.54;Astracã,46.35,48.04,.53;Sochi,43.6,39.73,.5;Lipetsk,52.6,39.57,.5;Penza,53.2,45,.5;Kirov,58.6,49.66,.5;Tcheboksary,56.13,47.25,.5;Kaliningrado,54.71,20.51,.49;Tula,54.19,37.62,.47;Kursk,51.73,36.19,.45;Stavropol,45.04,41.97,.45;Ulan-Ude,51.83,107.6,.44;Briansk,53.25,34.37,.4;Surgut,61.25,73.4,.38;Arcangel,64.54,40.54,.35;Iakutsk,62.03,129.73,.35;Tchita,52.03,113.5,.35;Vladimir,56.13,40.4,.35;Grozny,43.32,45.69,.33;Smolensk,54.78,32.05,.32;Múrmansk,68.97,33.08,.27;Iuzhno-Sakhalinsk,46.96,142.73,.2;Norilsk,69.35,88.2,.18;Petropavlovsk,53.04,158.65,.18;Magadan,59.56,150.8,.095;Kozelsk,54.04,35.78,.016;Sapporo,43.06,141.35,2;Fukuoka,33.59,130.4,2.6;Sendai,38.27,140.87,1.5;Kitakyushu,33.88,130.88,1.1;Niigata,37.92,139.04,.8;Hamamatsu,34.71,137.73,.8;Kumamoto,32.8,130.71,.74;Okayama,34.66,133.92,.72;Shizuoka,34.98,138.38,.7;Kagoshima,31.6,130.56,.6;Matsuyama,33.84,132.77,.5;Utsunomiya,36.57,139.88,.52;Oita,33.24,131.61,.48;Kanazawa,36.56,136.66,.46;Toyama,36.7,137.21,.41;Nagasaki,32.75,129.88,.41;Takamatsu,34.34,134.04,.42;Miyazaki,31.91,131.42,.4;Gifu,35.42,136.76,.4;Nagano,36.65,138.19,.37;Wakayama,34.23,135.17,.36;Asahikawa,43.77,142.36,.33;Naha,26.21,127.68,.32;Kochi,33.56,133.53,.32;Akita,39.72,140.1,.3;Morioka,39.7,141.15,.29;Fukushima,37.76,140.47,.28;Aomori,40.82,140.74,.27;Fukui,36.06,136.22,.26;Hakodate,41.77,140.73,.25;Yamagata,38.24,140.36,.25;Tokushima,34.07,134.55,.25;Shimonoseki,33.96,130.94,.25;Saga,33.25,130.3,.23;Matsue,35.47,133.05,.2;Kofu,35.66,138.57,.19;Tottori,35.5,134.24,.18;Kushiro,42.98,144.38,.17;Daca,23.8,90.4,22;Lahore,31.5,74.3,13;Hanói,21,105.85,8;Ho Chi Minh,10.8,106.7,9;Kuala Lumpur,3.1,101.7,8;Singapura,1.35,103.8,5.9;Riad,24.7,46.7,7.5;Bagdá,33.3,44.4,7.5;Cabul,34.5,69.2,4.6;Cartum,15.6,32.5,6;Adis Abeba,9,38.7,5;Luanda,-8.8,13.2,9;Casablanca,33.6,-7.6,4;Argel,36.75,3.06,3;Kiev,50.45,30.5,3;Varsóvia,52.2,21,3.1;Viena,48.2,16.4,2.9;Estocolmo,59.3,18.07,2.4;Santiago,-33.45,-70.65,7;Caracas,10.5,-66.9,3;Melbourne,-37.8,145,5.1;Auckland,-36.85,174.76,1.7;Vancouver,49.3,-123.1,2.6;Brasília,-15.8,-47.9,4.8;Lisboa,38.7,-9.14,3;Amsterdã,52.4,4.9,2.5;Bruxelas,50.85,4.35,2.1;Dublin,53.35,-6.26,1.4;Atenas,37.98,23.73,3.5;Jerusalém,31.77,35.2,1.3;Doha,25.3,51.5,2.4;Dubai,25.2,55.3,3.5;Quito,-.2,-78.5,2.8;Havana,23.1,-82.4,2.1;Montreal,45.5,-73.6,4.3'.split(';').map(s=>{s=s.split(',');return{n:s[0],la:+s[1],lo:+s[2],p:+s[3]*1e6,s:7*Math.pow(+s[3],.35)}});
-const PL=[['EUA — Montana (ICBM)',-111.2,47.5,'USA','EUA'],['Rússia — Kozelsk (ICBM)',35.8,54,'RUS','Rússia'],['China — Henan (ICBM)',112.4,34.6,'CHN','China'],['Coreia do Norte',125.7,39.5,'PRK','Coreia do Norte'],['Índia — Odisha',86.8,20.8,'IND','Índia'],['Paquistão',73,31,'PAK','Paquistão'],['Submarino no Pacífico',-150,30,null,'Oceano']];
-PL[1][1]=35.8;PL[1][2]=54;
-const PT=[['Tóquio',139.7,35.7,'JPN','Japão'],['Hiroshima',132.5,34.4,'JPN','Japão'],['Pequim',116.4,39.9,'CHN','China'],['Xangai',121.5,31.2,'CHN','China'],['Moscou',37.6,55.75,'RUS','Rússia'],['Nova York',-74,40.7,'USA','EUA'],['Washington',-77,38.9,'USA','EUA'],['Londres',-.1,51.5,'GBR','Reino Unido'],['Délhi',77.2,28.6,'IND','Índia'],['Seul',127,37.6,'KOR','Coreia do Sul']];
+const AY={USA:1};
+const DEV={USA:.60,JPN:.45,RUS:.45,CHN:.35,GBR:.60,FRA:.50,DEU:.45,KOR:.35,IND:.30,PAK:.25,IRN:.30,PRK:.20};
+let CITIES='Tóquio,35.7,139.7,6.779;Osaka,34.7,135.5,3.252;Nagoia,35.2,136.9,1.328;Quioto,35,135.8,1.090;Yokohama,35.4,139.6,.968;Kobe,34.7,135.2,.967;Hiroshima,34.4,132.5,.344;Fukuoka,33.6,130.4,.307;Nagasaki,32.75,129.88,.205;Moscou,55.75,37.6,4.137;Leningrado,59.9,30.3,3.191;Kiev,50.45,30.5,.846;Kharkov,49.99,36.23,.833;Baku,40.4,49.87,.809;Gorki,56.33,44,.644;Odessa,46.48,30.73,.604;Tashkent,41.3,69.25,.585;Rostov,47.23,39.7,.510;Nova York,40.7,-74,7.455;Chicago,41.9,-87.6,3.397;Filadélfia,39.95,-75.17,1.931;Detroit,42.33,-83.05,1.623;Los Angeles,34.05,-118.2,1.504;Cleveland,41.5,-81.69,.878;Baltimore,39.29,-76.61,.859;St. Louis,38.63,-90.2,.816;Boston,42.36,-71.06,.771;Pittsburgh,40.44,-79.99,.672;Washington,38.9,-77,.663;São Francisco,37.8,-122.4,.635;Milwaukee,43.04,-87.91,.587;Buffalo,42.89,-78.88,.576;Nova Orleans,29.95,-90.07,.495;Minneapolis,44.98,-93.27,.492;Cincinnati,39.1,-84.51,.456;Kansas City,39.1,-94.58,.399;Indianápolis,39.77,-86.16,.387;Londres,51.5,-.1,4.013'.split(';').map(s=>{s=s.split(',');return{n:s[0],la:+s[1],lo:+s[2],p:+s[3]*1e6,s:7*Math.pow(+s[3],.35)}});
+const PL=[['Tinian — 509th Composite Group',145.62,15.0,'USA','EUA'],['Alamogordo — Trinity',-106.55,33.88,'USA','EUA'],['Wendover Field — 509th',-114.04,40.72,'USA','EUA']];
+const PT=[['Hiroshima',132.5,34.4,'JPN','Japão'],['Kokura',130.88,33.88,'JPN','Japão'],['Niigata',139.04,37.92,'JPN','Japão'],['Nagasaki',129.88,32.75,'JPN','Japão'],['Tóquio',139.7,35.7,'JPN','Japão']];
 PL.forEach((p,i)=>$('pL').add(new Option(p[0],i)));PT.forEach((p,i)=>$('pT').add(new Option(p[0],i)));
-const PR=[['Hiroshima (15 kt)',15],['Nagasaki (21 kt)',21],['Tática (100 kt)',100],['Ogiva moderna (300 kt)',300],['W88 (475 kt)',475],['1 megaton',1000],['B83 (1,2 Mt)',1200],['5 megatons',5000],['Tsar Bomba (50 Mt)',50000]];
-PR.forEach((p,i)=>$('pr').add(new Option(p[0],i)));$('pr').value=3;
+const PR=[['Trinity — ~20 kt (teste)',20],['Bomba especial — ~15 kt (hipótese)',15],['Plutônio — ~20 kt (hipótese)',20],['100 kt — contrafactual, não disponível em 1945',100],['300 kt — contrafactual, não disponível em 1945',300],['1 megaton — contrafactual, não disponível em 1945',1000]];
+PR.forEach((p,i)=>$('pr').add(new Option(p[0],i)));$('pr').value=1;
 let S={L:null,T:null,mode:'L',scen:0,k:1};
 const Y=()=>Math.pow(10,+$('y').value);
 const fy=y=>y>=1000?(y/1000).toFixed(y>=10000?0:1)+' Mt':Math.round(y)+' kt';
@@ -126,7 +125,7 @@ $('c0').onclick=()=>{S.scen=0;$('c0').className='on';$('c1').className='';upd()}
 $('c1').onclick=()=>{S.scen=1;$('c1').className='on';$('c0').className='';upd()};
 $('zoom0').onclick=()=>svgS.call(zoom.transform,d3.zoomIdentity);
 $('zoomT').onclick=()=>{if(!S.T)return;const E=fx(),p=proj(S.T.ll),k=Math.max(1,Math.min(3000,150/(E.r1*sc/ER)));svgS.call(zoom.transform,d3.zoomIdentity.translate(W/2-k*p[0],H/2-k*p[1]).scale(k))};
-// efeitos (raios em km, escalas tipo Glasstone-Dolan simplificadas)
+// efeitos físicos simplificados; coeficientes são hipóteses do simulador, não dados históricos publicados
 function fx(y){y=y||Y();const c=Math.cbrt(y),g=$('bt').value==='gnd'?.8:1;
  return{fire:.066*Math.pow(y,.4),r20:.21*c*g,r5:.47*c*g,r1:1.2*c*g,th:.65*Math.pow(y,.41),rad:.8*Math.pow(y,.2),L:8*Math.pow(y,.45),gnd:$('bt').value==='gnd'}}
 function hav(a,b){const dl=(b[0]-a[0])*RAD,dp=(b[1]-a[1])*RAD,x=Math.sin(dp/2)**2+Math.cos(a[1]*RAD)*Math.cos(b[1]*RAD)*Math.sin(dl/2)**2;return 2*ER*Math.asin(Math.sqrt(x))}
@@ -149,33 +148,26 @@ function blast(gzs,land){const E=fx();
    fall+=land?Math.min(L*Wd*Math.PI/4*25*.15,3e7)/gzs.length:0}}
  return{dead,inj,fall:fall*(1-.7*$('sh').value/100),E}}
 function retal(A,T,rsv){
- const z=(note)=>({note:note,a:0,r:0,n:1,fam:0,soot:0,resp:[]});
- if(!A)return z('defina o LANÇAMENTO em um país (clique em terra ou use "Lançamento rápido"). Lançamento sem país (oceano/submarino): atribuição incerta, retaliação não modelada.');
- if(A===T)return z('lançamento e alvo estão no mesmo país: não há retaliação externa.');
- let resp=[];if(NUC[T])resp.push(T);(UMB[T]||[]).forEach(c=>{if(c!==A&&resp.indexOf(c)<0)resp.push(c)});
- let info='',k=1;
- if(!resp.length){const ADV={USA:['RUS','CHN'],RUS:['USA','GBR','FRA'],CHN:['USA','IND'],FRA:['RUS'],GBR:['RUS'],IND:['PAK','CHN'],PAK:['IND'],ISR:['IRN'].filter(c=>NUC[c]),PRK:['USA']}[A]||[];
-  if(!ADV.length)return z('o país alvo não tem arsenal nem aliado nuclear, e o atacante não tem rival nuclear modelado: reação só diplomática, econômica e convencional.');
-  resp=ADV;k=.3;info='Ninguém é obrigado a responder em nome do alvo; foi modelada intervenção parcial (30%) de rivais nucleares do atacante: '+resp.map(c=>NUC[c][1]).join(', ')+'.'}
- const f=P(rsv).l*k,tw=resp.reduce((s,c)=>s+NUC[c][0],0),Wr=tw*f,Wa=NUC[A]?NUC[A][0]*f:0;
- const Yr=resp.reduce((s,c)=>s+NUC[c][0]*(AY[c]||100),0)/tw,apop=NUC[A]?NUC[A][2]:POP[A]||60,popRM=resp.reduce((s,c)=>s+(NUC[c]?NUC[c][2]:POP[c]||60),0);
- const a=Math.min(cvd(apop,Wr,Yr),.7*apop*1e6),r=Wa>0?Math.min(cvd(popRM,Wa,AY[A]||100),.7*popRM*1e6):0,n=1+Wr+Wa;
- const nc=(Wr+Wa)*$('cv').value/100,soot=Math.min(150,nc*.045),fam=soot<1.5?0:8.2e9*Math.max(.05,Math.min(.66,.24+.41*Math.log(soot/5)/Math.log(30)));
- return{a:a,r:r,n:n,fam:fam,soot:soot,resp:resp,note:'',info:info}}
-function geo(A,T,Tn,An,R){const b=[];const nA=NUC[A],nT=NUC[T];
- if(nT)b.push('<b>'+Tn+'</b> é potência nuclear: doutrina de dissuasão prevê resposta imediata (lançamento sob alerta).');
- else if(UMB[T])b.push('<b>'+Tn+'</b> está sob guarda-chuva nuclear de '+UMB[T].map(c=>NUC[c][1]).join(', ')+': ataque aciona compromissos de defesa mútua (ex.: Art. 5º da OTAN).');
- else b.push('<b>'+Tn+'</b> não tem aliado nuclear formal: provável resposta via ONU, sanções e coalizão.');
- if(!A)b.push('Origem não atribuível (submarino/terrorista): crise de atribuição, risco de retaliação contra suspeitos errados.');
- else if(!nA)b.push('Atacante '+An+' sem arsenal nuclear declarado: possível intervenção militar convencional e isolamento total.');
- b.push('Quebra do "tabu nuclear" desde 1945; colapso de mercados, cadeias de suprimento e rotas aéreas/marítimas na região.');
- b.push('Fallout e emergência humanitária atravessam fronteiras (países vizinhos do alvo).');
- if(R.n>50)b.push('Escalada em larga escala: <b>inverno nuclear</b> e colapso agrícola global.');
- if(T==='JPN'&&A&&A!=='USA')b.push('Tratado de Cooperação Mútua e Segurança EUA–Japão (1960): os EUA têm compromisso formal de defesa do Japão.');
- if(A==='CHN'||A==='IND')b.push('Doutrina declarada de "não usar primeiro": o ataque romperia essa promessa e destruiria a credibilidade diplomática de '+An+'.');
- if(A==='RUS')b.push('A doutrina russa (decreto de 2020, revisada em 2024) prevê uso nuclear em resposta a ataque nuclear ou ameaça existencial.');
- if((A==='IND'&&T==='PAK')||(A==='PAK'&&T==='IND'))b.push('Índia–Paquistão: crises anteriores (Kargil 1999, 2019) mostram janela de decisão curta e pouca comunicação de crise.');
- return b}
+  return {note:'Em 27/07/1945 não existe um segundo arsenal nuclear operacional conhecido; portanto, a retaliação nuclear não é quantificada.',a:0,r:0,n:1,fam:0,soot:0,resp:[]};
+}
+function geo(A,T,Tn,An,R){
+  const b=[];
+  if(T==='JPN'){
+    b.push('<b>Japão, 27/07/1945:</b> continua em guerra contra os Aliados; a Declaração de Potsdam (26/07) exige a rendição e ameaça destruição caso ela não ocorra.');
+    b.push('A ordem de 25/07/1945 já autorizava o primeiro emprego da bomba especial, depois de cerca de 3 de agosto, contra Hiroshima, Kokura, Niigata ou Nagasaki.');
+    b.push('A URSS ainda não havia declarado guerra ao Japão. O acordo secreto de Yalta previa entrada soviética na guerra contra o Japão dois ou três meses após a derrota da Alemanha; em 05/04 a URSS havia anunciado que não renovaria o pacto de neutralidade com o Japão.');
+    b.push('A Carta da ONU havia sido assinada em 26/06, mas ainda não estava em vigor.');
+  } else if(T==='USA'){
+    b.push('<b>Estados Unidos, 27/07/1945:</b> único Estado com explosão nuclear realizada e com uso da nova arma em preparação.');
+    b.push('Não há retaliação nuclear de outro Estado a modelar neste recorte.');
+  } else {
+    b.push('<b>Contexto de 27/07/1945:</b> o sistema internacional está em transição para a ordem do pós-guerra.');
+    b.push('Não aplicar OTAN, Guerra Fria, dissuasão nuclear bilateral ou doutrinas nucleares posteriores.');
+  }
+  b.push('A Alemanha havia capitulado em maio; o teatro de guerra ainda ativo era principalmente o Pacífico.');
+  b.push('As consequências físicas e mortes são hipóteses do simulador, não acontecimentos que já tivessem ocorrido em 27/07/1945.');
+  return b
+}
 function ringsList(){const E=fx();return[['Radiação 500 rem',E.rad,'#40e070'],['Bola de fogo',E.fire,'#ffffff'],['Onda 20 psi (destruição total)',E.r20,'#ff3b3b'],['Onda 5 psi (prédios colapsam)',E.r5,'#ff8a3d'],['Queimaduras 3º grau',E.th,'#ffd24a'],['Onda 1 psi (vidros quebram)',E.r1,'#4aa3ff']]}
 function draw(){while(ov.firstChild)ov.removeChild(ov.firstChild);
  const pg=d3.geoPath(proj).pointRadius(5/S.k),o=ovS;
@@ -199,7 +191,7 @@ function upd(){
  $('nwl').textContent=$('nw').value;$('pll').textContent=$('pl').value;$('pil').textContent=$('pi').value;$('cvl').textContent=$('cv').value;$('shl').textContent=$('sh').value;save();
  const y=Y();$('yl').textContent='Potência: '+fy(y);
  $('lg').innerHTML=ringsList().map(r=>'<div><i style="background:'+r[2]+'"></i>'+r[0]+': <b>'+(r[1]<1?Math.round(r[1]*1000)+' m':r[1].toFixed(1)+' km')+'</b></div>').join('')+(fx().gnd?'<div><i style="background:#a06bff"></i>Fallout: ~<b>'+Math.round(fx().L)+' km</b> a favor do vento</div>':'');
- $('route').textContent='Lançamento: '+(S.L?S.L.name:'—')+' | Alvo: '+(S.T?S.T.name:'—');
+ $('route').textContent='Origem: '+(S.L?S.L.name:'—')+' | Alvo: '+(S.T?S.T.name:'—');
  draw();
  if(!S.T){$('out').innerHTML='<div class="card mu">Clique no mapa (ou escolha um preset) para definir lançamento e alvo.</div>';return}
  const land=!!S.T.code,B=blast(GZ(),land),A=S.L?S.L.code:null,T=S.T.code,
@@ -208,17 +200,17 @@ function upd(){
  const R=S.scen?retal(A,T):{a:0,r:0,n:1,fam:0,resp:[],note:''};
  const indR=ind0+.3*(R.a+R.r)+R.fam,tot1=B.dead+indR+R.a+R.r;
  const ind=S.scen?indR+R.a+R.r:ind0,tot=S.scen?tot1:tot0;
- let h=(S.scen&&R.info?'<div class="card mu">'+R.info+'</div>':'')+(S.scen&&R.note?'<div class="card" style="border-color:var(--ac)"><b>A retaliação não muda os números:</b> '+R.note+'</div>':'')+'<div class="card"><div class="mu">'+(S.scen?'Com retaliação':'Sem retaliação')+' — total estimado de mortes</div><div class="big">'+fm(tot)+'</div><div class="mu">faixa plausível: '+fm(tot*.6)+' – '+fm(tot*1.7)+'</div></div>';
+ let h='<div class="card mu"><b>Snapshot:</b> 27/07/1945. Estimativa contrafactual; Hiroshima e Nagasaki ainda não haviam ocorrido.</div>'+(S.scen&&R.info?'<div class="card mu">'+R.info+'</div>':'')+(S.scen&&R.note?'<div class="card" style="border-color:var(--ac)"><b>A retaliação não muda os números:</b> '+R.note+'</div>':'')+'<div class="card"><div class="mu">'+(S.scen?'Crise internacional':'Sem escalada nuclear')+' — total estimado de mortes</div><div class="big">'+fm(tot)+'</div><div class="mu">faixa plausível: '+fm(tot*.6)+' – '+fm(tot*1.7)+'</div></div>';
  h+='<div class="card"><table><tr><td>Mortes diretas (explosão local)</td><td>'+fm(B.dead)+'</td></tr><tr><td>Feridos graves</td><td>'+fm(B.inj)+'</td></tr><tr><td>Indiretas: sistema de saúde/queimados</td><td>'+fm(med)+'</td></tr>'+(B.E.gnd?'<tr><td>Indiretas: fallout</td><td>'+fm(B.fall)+'</td></tr>':'');
- if(S.scen)h+='<tr><td>Retaliação — mortes no país atacante ('+(A&&NUC[A]?NUC[A][1]:'—')+')</td><td>'+fm(R.a)+'</td></tr><tr><td>Contra-ataque — mortes nos aliados/alvo</td><td>'+fm(R.r)+'</td></tr><tr><td>Fome/inverno nuclear global</td><td>'+fm(R.fam)+'</td></tr><tr><td>Detonações estimadas</td><td>~'+Math.round(R.n)+'</td></tr><tr><td>Fuligem na estratosfera</td><td>~'+R.soot.toFixed(1)+' Tg</td></tr>';
+ if(S.scen)h+='<tr><td>Retaliação — mortes no país atacante ('+(A&&NUC[A]?NUC[A][1]:'—')+')</td><td>'+fm(R.a)+'</td></tr><tr><td>Contra-ataque — mortes nos aliados/alvo</td><td>'+fm(R.r)+'</td></tr><tr><td>Fome/inverno nuclear global</td><td>não modelado neste recorte</td></tr><tr><td>Detonações estimadas</td><td>~'+Math.round(R.n)+'</td></tr><tr><td>Fuligem na estratosfera</td><td>~'+R.soot.toFixed(1)+' Tg</td></tr>';
  h+='<tr><td><b>Total direto</b></td><td><b>'+fm(B.dead)+'</b></td></tr><tr><td><b>Total indireto</b></td><td><b>'+fm(ind)+'</b></td></tr><tr><td><b>TOTAL</b></td><td><b>'+fm(tot)+'</b></td></tr></table></div>';
- if(S.L)h+='<div class="mu">Distância: '+Math.round(dist).toLocaleString('pt-BR')+' km · tempo de voo (ICBM) ≈ '+tm+' min</div>';
+ if(S.L)h+='<div class="mu">Distância: '+Math.round(dist).toLocaleString('pt-BR')+' km · tempo de voo aproximado ≈ '+tm+' min</div>';
  const rr=R.a+R.r,st=[['Dia 1',B.dead+rr*.7],['Semana 1',B.dead+rr*.9+B.fall*.5+med*.4],['Mês 1',B.dead+rr+B.fall*.9+med*.8+R.fam*.05],['Ano 1',tot]];
  h+='<h3>Linha do tempo (acumulado)</h3><div class="card"><table>'+st.map(x=>'<tr><td>'+x[0]+'</td><td>'+fm(x[1])+'</td></tr>').join('')+'</table></div>';
  const pc=c=>NUC[c]?NUC[c][2]:POP[c]||60,cr=[[S.T.name+' (alvo)',B.dead+B.fall+med]];
  if(S.scen&&R.resp.length){const tp=R.resp.reduce((s,c)=>s+pc(c),0);cr.push([(A&&NUC[A]?NUC[A][1]:'Atacante')+' (retaliação)',R.a*1.3]);R.resp.forEach(c=>cr.push([(NUC[c]?NUC[c][1]:c)+' (contra-ataque)',R.r*1.3*pc(c)/tp]));cr.push(['Resto do mundo (fome)',R.fam])}
  const tf=v=>{const q=retal(A,T,v);return B.dead+ind0+.3*(q.a+q.r)+q.fam+q.a+q.r};
- h+='<h3>Árvore de cenários</h3><div class="card"><table>'+[['Sem retaliação',tot0],['Resposta limitada',tf(.15)],['Resposta proporcional',tf(.5)],['Escalada total',tf(1)]].map(x=>'<tr><td>'+x[0]+'</td><td>'+fm(x[1])+'</td></tr>').join('')+'</table></div>';
+ h+='<h3>Árvore de cenários</h3><div class="card"><table>'+[['Sem escalada nuclear',tot0],['Crise limitada',tf(.15)],['Crise ampliada',tf(.5)],['Crise máxima',tf(1)]].map(x=>'<tr><td>'+x[0]+'</td><td>'+fm(x[1])+'</td></tr>').join('')+'</table></div>';
  h+='<h3>Mortes por país</h3><div class="card"><table>'+cr.map(x=>'<tr><td>'+x[0]+'</td><td>'+fm(x[1])+'</td></tr>').join('')+'</table></div>';
  h+='<h3>Consequências geopolíticas</h3><ul>'+geo(A,T,S.T.name,S.L?S.L.name:'',R).map(x=>'<li>'+x+'</li>').join('')+'</ul>';
  $('out').innerHTML=h}
