@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Simulador de Detonação Nuclear</title>
+<style>
+:root{--bg:#f3f5f8;--pn:#fff;--tx:#14202e;--mu:#5d6b7c;--ln:#cbd5e1;--land:#dfe7ef;--sea:#bcd3e6;--bd:#6b829a;--ac:#d62d20;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b1118;--pn:#131c27;--tx:#e6edf5;--mu:#8fa0b3;--ln:#263545;--land:#1d2b3a;--sea:#0b1622;--bd:#4d6a88}}
+:root[data-theme="dark"]{--bg:#0b1118;--pn:#131c27;--tx:#e6edf5;--mu:#8fa0b3;--ln:#263545;--land:#1d2b3a;--sea:#0b1622;--bd:#4d6a88}
+*{box-sizing:border-box}html,body{height:100%;margin:0;background:var(--bg);color:var(--tx);font:14px/1.4 system-ui,sans-serif}
+#app{display:flex;height:100%}
+#side{width:370px;max-width:100%;overflow-y:auto;padding:12px;background:var(--pn);border-right:1px solid var(--ln)}
+#mapw{flex:1;position:relative;background:var(--sea);min-width:0}#map{position:absolute;inset:0}
+#map path{vector-effect:non-scaling-stroke}
+@media(max-width:820px){#app{flex-direction:column-reverse}#side{width:100%;height:58%;border:0;border-top:1px solid var(--ln)}#mapw{height:42%;flex:none}}
+h1{font-size:17px;margin:0 0 8px}h3{font-size:13px;margin:12px 0 4px;color:var(--mu);text-transform:uppercase;letter-spacing:.04em}
+button,select{background:var(--bg);color:var(--tx);border:1px solid var(--ln);border-radius:6px;padding:6px 8px;font:inherit;cursor:pointer}
+button.on{background:var(--ac);border-color:var(--ac);color:#fff}
+.row{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0}.row>*{flex:1}
+input[type=range]{width:100%}
+.card{border:1px solid var(--ln);border-radius:8px;padding:8px;margin:6px 0;background:var(--bg)}
+.big{font-size:22px;font-weight:700}.mu{color:var(--mu);font-size:12px}
+table{width:100%;border-collapse:collapse}td{padding:2px 0;border-bottom:1px solid var(--ln)}td:last-child{text-align:right}
+.lg i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px}
+ul{padding-left:18px;margin:4px 0}
+#hint{position:absolute;left:8px;top:8px;background:var(--pn);border:1px solid var(--ln);padding:4px 8px;border-radius:6px;font-size:12px;z-index:2}
+#err{padding:20px;color:var(--ac)}
+</style></head><body>
+<div id="app">
+<div id="side">
+<h1>☢️ Simulador de Detonação Nuclear</h1>
+<div class="mu">Ferramenta educacional. Modelo simplificado com alta incerteza — não são dados oficiais.</div>
+<h3>1. Lançamento e alvo (clique no mapa)</h3>
+<div class="row"><button id="mL" class="on">📍 Definir lançamento</button><button id="mT">🎯 Definir alvo</button></div>
+<div class="row"><select id="pL"><option value="">Lançamento rápido…</option></select><select id="pT"><option value="">Alvo rápido…</option></select></div>
+<div class="row"><button id="zoomT">🔍 Aproximar do alvo</button><button id="zoom0">🌍 Mundo</button></div>
+<div class="mu" id="route">Lançamento: — | Alvo: —</div>
+<h3>2. Bomba</h3>
+<div class="row"><select id="pr"></select></div>
+<div id="yl" class="mu"></div><input id="y" type="range" min="0" max="5" step="0.01" value="2.18">
+<div class="row"><select id="bt"><option value="air">Explosão aérea (máx. dano de onda)</option><option value="gnd">Explosão em solo (gera fallout)</option></select></div>
+<div class="mu">Direção do vento (fallout): <span id="wl">90</span>° (0=N, 90=L)</div><input id="w" type="range" min="0" max="359" value="90">
+<h3>3. Cenário</h3>
+<div class="row"><button id="c0" class="on">Sem retaliação</button><button id="c1">Com retaliação</button></div>
+<div id="out"></div>
+<h3>Raios dos efeitos</h3><div class="lg" id="lg"></div>
+</div>
+<div id="mapw"><div id="hint">Roda do mouse / pinça = zoom · arraste = mover</div><div id="map"></div></div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/datamaps/0.5.9/datamaps.all.min.js"></script>
+<script>
+(function(){
+if(typeof Datamap==='undefined'||typeof d3==='undefined'){document.getElementById('map').innerHTML='<div id="err">Não foi possível carregar a biblioteca do mapa.</div>';return}
+const $=id=>document.getElementById(id),RAD=Math.PI/180,ER=6371;
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+// [warheads estoque, nome, população mi]
+const NUC={USA:[3700,'EUA',335],RUS:[4300,'Rússia',144],CHN:[600,'China',1410],FRA:[290,'França',66],GBR:[225,'Reino Unido',68],IND:[180,'Índia',1430],PAK:[170,'Paquistão',245],ISR:[90,'Israel',9.5],PRK:[50,'Coreia do Norte',26]};
+const POP={JPN:124,KOR:52,DEU:84,CAN:40,ITA:59,ESP:48,POL:38,TUR:85,AUS:26,TWN:23,BLR:9,UKR:38,IRN:89};
+const UMB={JPN:['USA'],KOR:['USA'],AUS:['USA'],TWN:['USA'],BLR:['RUS']};
+'DEU ITA ESP POL TUR NLD BEL NOR DNK PRT GRC CZE ROU HUN BGR HRV SVK SVN LTU LVA EST ALB ISL LUX CAN FIN SWE'.split(' ').forEach(c=>UMB[c]=['USA','GBR','FRA']);
+const CITIES='Tóquio,35.7,139.7,37;Osaka,34.7,135.5,19;Nagoia,35.2,136.9,9;Pequim,39.9,116.4,21.5;Xangai,31.2,121.5,25;Cantão,23.1,113.3,18;Shenzhen,22.5,114.1,17.5;Chongqing,29.6,106.5,16;Chengdu,30.7,104.1,16;Wuhan,30.6,114.3,11;Hong Kong,22.3,114.2,7.5;Moscou,55.75,37.6,12.6;S. Petersburgo,59.9,30.3,5.6;Novosibirsk,55,82.9,1.6;Yekaterinburg,56.8,60.6,1.5;Vladivostok,43.1,131.9,.6;Nova York,40.7,-74,18.8;Los Angeles,34.05,-118.2,12.5;Chicago,41.9,-87.6,8.9;Washington,38.9,-77,6.3;Houston,29.8,-95.4,7;São Francisco,37.8,-122.4,4.7;Seattle,47.6,-122.3,4;Dallas,32.8,-96.8,7.5;Miami,25.8,-80.2,6.1;Atlanta,33.7,-84.4,6.1;Londres,51.5,-.1,9.5;Paris,48.9,2.35,11;Berlim,52.5,13.4,3.7;Madri,40.4,-3.7,6.7;Roma,41.9,12.5,4.3;Istambul,41,29,15.5;Délhi,28.6,77.2,32;Mumbai,19.1,72.9,21;Calcutá,22.6,88.4,15;Bangalore,13,77.6,13;Karachi,24.9,67,16;Teerã,35.7,51.4,9;Cairo,30,31.2,22;Lagos,6.5,3.4,15;Kinshasa,-4.3,15.3,15;Joanesburgo,-26.2,28,6;Nairóbi,-1.3,36.8,5;São Paulo,-23.55,-46.6,22;Rio,-22.9,-43.2,13;Buenos Aires,-34.6,-58.4,15;Lima,-12,-77,11;Bogotá,4.7,-74.1,11;Cidade do México,19.4,-99.1,22;Toronto,43.7,-79.4,6.4;Seul,37.6,127,10;Pyongyang,39,125.7,3;Taipei,25,121.5,7;Manila,14.6,121,14;Jacarta,-6.2,106.8,11;Bangkok,13.75,100.5,11;Sydney,-33.9,151.2,5.3;Tel Aviv,32.1,34.8,4;Hiroshima,34.4,132.5,1.2'.split(';').map(s=>{s=s.split(',');return{n:s[0],la:+s[1],lo:+s[2],p:+s[3]*1e6,s:7*Math.pow(+s[3],.35)}});
+const PL=[['EUA — Montana (ICBM)',-111.2,47.5,'USA','EUA'],['Rússia — Kozelsk (ICBM)',35.8,54,'RUS','Rússia'],['China — Henan (ICBM)',112.4,34.6,'CHN','China'],['Coreia do Norte',125.7,39.5,'PRK','Coreia do Norte'],['Índia — Odisha',86.8,20.8,'IND','Índia'],['Paquistão',73,31,'PAK','Paquistão'],['Submarino no Pacífico',-150,30,null,'Oceano']];
+PL[1][1]=35.8;PL[1][2]=54;
+const PT=[['Tóquio',139.7,35.7,'JPN','Japão'],['Hiroshima',132.5,34.4,'JPN','Japão'],['Pequim',116.4,39.9,'CHN','China'],['Xangai',121.5,31.2,'CHN','China'],['Moscou',37.6,55.75,'RUS','Rússia'],['Nova York',-74,40.7,'USA','EUA'],['Washington',-77,38.9,'USA','EUA'],['Londres',-.1,51.5,'GBR','Reino Unido'],['Délhi',77.2,28.6,'IND','Índia'],['Seul',127,37.6,'KOR','Coreia do Sul']];
+PL.forEach((p,i)=>$('pL').add(new Option(p[0],i)));PT.forEach((p,i)=>$('pT').add(new Option(p[0],i)));
+const PR=[['Hiroshima (15 kt)',15],['Nagasaki (21 kt)',21],['Tática (100 kt)',100],['Ogiva moderna (300 kt)',300],['W88 (475 kt)',475],['1 megaton',1000],['B83 (1,2 Mt)',1200],['5 megatons',5000],['Tsar Bomba (50 Mt)',50000]];
+PR.forEach((p,i)=>$('pr').add(new Option(p[0],i)));$('pr').value=3;
+let S={L:null,T:null,mode:'L',scen:0,k:1};
+const Y=()=>Math.pow(10,+$('y').value);
+const fy=y=>y>=1000?(y/1000).toFixed(y>=10000?0:1)+' Mt':Math.round(y)+' kt';
+const fm=n=>n>=1e9?(n/1e9).toFixed(2)+' bi':n>=1e6?(n/1e6).toFixed(2)+' mi':n>=1e3?Math.round(n/1e3)+' mil':Math.round(n)+'';
+// projeção equiretangular própria
+let W,H,proj,sc;
+function setProj(el){W=el.offsetWidth;H=el.offsetHeight;sc=Math.min(W/(2*Math.PI),H/Math.PI);proj=d3.geo.equirectangular().scale(sc).translate([W/2,H/2]);return{path:d3.geo.path().projection(proj),projection:proj}}
+const map=new Datamap({element:$('map'),scope:'world',responsive:false,setProjection:setProj,fills:{defaultFill:css('--land')},geographyConfig:{borderColor:css('--bd'),borderWidth:.6,highlightOnHover:false,popupOnHover:false}});
+const svg=$('map').querySelector('svg'),NS='http://www.w3.org/2000/svg';
+const wrap=document.createElementNS(NS,'g');while(svg.firstChild)wrap.appendChild(svg.firstChild);svg.appendChild(wrap);
+const ov=document.createElementNS(NS,'g');ov.style.pointerEvents='none';wrap.appendChild(ov);
+const zoom=d3.behavior.zoom().scaleExtent([1,3000]).on('zoom',applyT);
+d3.select(svg).call(zoom);
+function applyT(){const t=zoom.translate();S.k=zoom.scale();wrap.setAttribute('transform','translate('+t[0]+','+t[1]+')scale('+S.k+')');draw()}
+d3.select(svg).on('click',function(){
+ const e=d3.event,t=e.target,m=d3.mouse(wrap),ll=proj.invert(m);
+ if(Math.abs(ll[0])>180||Math.abs(ll[1])>90)return;
+ let code=null,name='Oceano';
+ if(t.classList&&t.classList.contains('datamaps-subunit')){code=t.classList[1];try{name=d3.select(t).datum().properties.name}catch(x){name=code}}
+ set(S.mode,{ll:ll,code:code,name:name});
+});
+function set(m,v){S[m]=v;if(m==='L'&&!S.T)setMode('T');upd()}
+function setMode(m){S.mode=m;$('mL').className=m==='L'?'on':'';$('mT').className=m==='T'?'on':''}
+$('mL').onclick=()=>setMode('L');$('mT').onclick=()=>setMode('T');
+$('pL').onchange=e=>{const p=PL[e.target.value];if(p){S.L={ll:[p[1],p[2]],code:p[3],name:p[4]};setMode('T');upd()}};
+$('pT').onchange=e=>{const p=PT[e.target.value];if(p){S.T={ll:[p[1],p[2]],code:p[3],name:p[4]};upd()}};
+$('pr').onchange=e=>{$('y').value=Math.log10(PR[e.target.value][1]);upd()};
+$('y').oninput=()=>upd();$('bt').onchange=upd;$('w').oninput=()=>{$('wl').textContent=$('w').value;upd()};
+$('c0').onclick=()=>{S.scen=0;$('c0').className='on';$('c1').className='';upd()};
+$('c1').onclick=()=>{S.scen=1;$('c1').className='on';$('c0').className='';upd()};
+$('zoom0').onclick=()=>{zoom.scale(1).translate([0,0]);applyT()};
+$('zoomT').onclick=()=>{if(!S.T)return;const E=fx(),p=proj(S.T.ll),k=Math.max(1,Math.min(3000,150/(E.r1*sc/ER)));zoom.scale(k).translate([W/2-k*p[0],H/2-k*p[1]]);applyT()};
+// efeitos (raios em km, escalas tipo Glasstone-Dolan simplificadas)
+function fx(){const y=Y(),c=Math.cbrt(y),g=$('bt').value==='gnd'?.8:1;
+ return{fire:.066*Math.pow(y,.4),r20:.21*c*g,r5:.47*c*g,r1:1.2*c*g,th:.65*Math.pow(y,.41),rad:.8*Math.pow(y,.2),L:8*Math.pow(y,.45),gnd:$('bt').value==='gnd'}}
+function hav(a,b){const dl=(b[0]-a[0])*RAD,dp=(b[1]-a[1])*RAD,x=Math.sin(dp/2)**2+Math.cos(a[1]*RAD)*Math.cos(b[1]*RAD)*Math.sin(dl/2)**2;return 2*ER*Math.asin(Math.sqrt(x))}
+const G=[];let GW=0;for(let i=-5;i<=5;i++)for(let j=-5;j<=5;j++){const a=i/2,b=j/2,w=Math.exp(-(a*a+b*b)/2);G.push([a,b,w]);GW+=w}
+function popIn(R,gz,land){let s=0;for(const c of CITIES){const D=hav(gz,[c.lo,c.la]);if(D-3*c.s>R)continue;let f=0;for(const q of G){if(Math.hypot(D+q[0]*c.s,q[1]*c.s)<R)f+=q[2]}s+=c.p*f/GW}return s+(land?25*Math.PI*R*R*.5:0)}
+function blast(gz,land){const E=fx();
+ let z=[[E.fire,1],[E.r20,.98],[E.r5,.6],[E.th,.25],[E.r1,.03],[E.rad,.9]].sort((a,b)=>a[0]-b[0]);
+ let m=1,prev=0,dead=0,inj=0;
+ for(const[r,l0]of z){m=Math.min(m,l0);const p=Math.max(0,popIn(r,gz,land)-prev);dead+=p*m;inj+=p*(1-m)*.6;prev+=p}
+ let fall=0;
+ if(E.gnd){const th=(+$('w').value)*RAD,L=E.L,Wd=L*.18,cx=Math.cos(gz[1]*RAD);
+  for(const c of CITIES){const dx=(c.lo-gz[0])*111.32*cx,dy=(c.la-gz[1])*110.57,u=dx*Math.sin(th)+dy*Math.cos(th),v=dx*Math.cos(th)-dy*Math.sin(th);
+   if(Math.pow((u-L/2)/(L/2),2)+Math.pow(v/(Wd/2),2)<1&&hav(gz,[c.lo,c.la])>E.r5)fall+=c.p*.2}
+  fall+=land?Math.min(L*Wd*Math.PI/4*25*.15,3e7):0}
+ return{dead,inj,fall,E}}
+function retal(A,T){
+ if(!A||!NUC[A])return{note:'Atacante sem arsenal identificado (ou lançamento sem origem terrestre): sem retaliação nuclear modelada.',a:0,r:0,n:1,fam:0,resp:[]};
+ let resp=[];if(NUC[T]&&T!==A)resp.push(T);(UMB[T]||[]).forEach(c=>{if(c!==A&&resp.indexOf(c)<0)resp.push(c)});
+ if(!resp.length)return{note:'Ninguém com arsenal nuclear está obrigado a responder: reação seria diplomática, econômica e convencional.',a:0,r:0,n:1,fam:0,resp:[]};
+ const Wr=resp.reduce((s,c)=>s+NUC[c][0],0)*.6*.75,Wa=NUC[A][0]*.6*.75;
+ const popR=resp.reduce((s,c)=>s+(NUC[c]?NUC[c][2]:POP[c]||60),0)*1e6;
+ const a=Math.min(Wr*.25e6,.7*NUC[A][2]*1e6),r=Math.min(Wa*.25e6,.7*popR),n=1+Wr+Wa;
+ const fam=n>50?5e9*Math.pow(Math.min(1,n/4400),.4)*.7:0;
+ return{a,r,n,fam,resp,note:''}}
+function geo(A,T,Tn,An,R){const b=[];const nA=NUC[A],nT=NUC[T];
+ if(nT)b.push('<b>'+Tn+'</b> é potência nuclear: doutrina de dissuasão prevê resposta imediata (lançamento sob alerta).');
+ else if(UMB[T])b.push('<b>'+Tn+'</b> está sob guarda-chuva nuclear de '+UMB[T].map(c=>NUC[c][1]).join(', ')+': ataque aciona compromissos de defesa mútua (ex.: Art. 5º da OTAN).');
+ else b.push('<b>'+Tn+'</b> não tem aliado nuclear formal: provável resposta via ONU, sanções e coalizão.');
+ if(!A)b.push('Origem não atribuível (submarino/terrorista): crise de atribuição, risco de retaliação contra suspeitos errados.');
+ else if(!nA)b.push('Atacante '+An+' sem arsenal nuclear declarado: possível intervenção militar convencional e isolamento total.');
+ b.push('Quebra do "tabu nuclear" desde 1945; colapso de mercados, cadeias de suprimento e rotas aéreas/marítimas na região.');
+ b.push('Fallout e emergência humanitária atravessam fronteiras (países vizinhos do alvo).');
+ if(R.n>50)b.push('Escalada em larga escala: <b>inverno nuclear</b> e colapso agrícola global.');
+ return b}
+function ringsList(){const E=fx();return[['Radiação 500 rem',E.rad,'#40e070'],['Bola de fogo',E.fire,'#ffffff'],['Onda 20 psi (destruição total)',E.r20,'#ff3b3b'],['Onda 5 psi (prédios colapsam)',E.r5,'#ff8a3d'],['Queimaduras 3º grau',E.th,'#ffd24a'],['Onda 1 psi (vidros quebram)',E.r1,'#4aa3ff']]}
+function draw(){while(ov.firstChild)ov.removeChild(ov.firstChild);
+ const pg=d3.geo.path().projection(proj).pointRadius(5/S.k),o=d3.select(ov);
+ const add=(g,fill,st,sw,op)=>o.append('path').attr('d',pg(g)).style({fill:fill,stroke:st,'stroke-width':sw,'fill-opacity':op,'vector-effect':'non-scaling-stroke'});
+ if(S.L&&S.T)add({type:'LineString',coordinates:[S.L.ll,S.T.ll]},'none','#ffcc00',1.5,0).style('stroke-dasharray','6 4');
+ if(S.T){const E=fx();
+  ringsList().sort((a,b)=>b[1]-a[1]).forEach(r=>add(d3.geo.circle().origin(S.T.ll).angle(r[1]/111.195)(),r[2],r[2],1,.28));
+  if(E.gnd){const th=(+$('w').value)*RAD,L=E.L,Wd=L*.18,cx=Math.cos(S.T.ll[1]*RAD),pts=[];
+   for(let i=0;i<=40;i++){const t=i/40*2*Math.PI,u=L/2*(1+Math.cos(t)),v=Wd/2*Math.sin(t);
+    pts.push([S.T.ll[0]+(u*Math.sin(th)+v*Math.cos(th))/(111.32*cx),S.T.ll[1]+(u*Math.cos(th)-v*Math.sin(th))/110.57])}
+   add({type:'LineString',coordinates:pts},'#a06bff','#a06bff',1,.2)}
+  add({type:'Point',coordinates:S.T.ll},'#ff2d2d','#fff',1.2,1)}
+ if(S.L)add({type:'Point',coordinates:S.L.ll},'#18d0ff','#fff',1.2,1)}
+function upd(){
+ const y=Y();$('yl').textContent='Potência: '+fy(y);
+ $('lg').innerHTML=ringsList().map(r=>'<div><i style="background:'+r[2]+'"></i>'+r[0]+': <b>'+(r[1]<1?Math.round(r[1]*1000)+' m':r[1].toFixed(1)+' km')+'</b></div>').join('')+(fx().gnd?'<div><i style="background:#a06bff"></i>Fallout: ~<b>'+Math.round(fx().L)+' km</b> a favor do vento</div>':'');
+ $('route').textContent='Lançamento: '+(S.L?S.L.name:'—')+' | Alvo: '+(S.T?S.T.name:'—');
+ draw();
+ if(!S.T){$('out').innerHTML='<div class="card mu">Clique no mapa (ou escolha um preset) para definir lançamento e alvo.</div>';return}
+ const land=!!S.T.code,B=blast(S.T.ll,land),A=S.L?S.L.code:null,T=S.T.code,
+  dist=S.L?hav(S.L.ll,S.T.ll):0,tm=S.L?Math.round(5+dist/432):0;
+ const med=.3*B.dead,ind0=B.fall+med,tot0=B.dead+ind0;
+ const R=S.scen?retal(A,T):{a:0,r:0,n:1,fam:0,resp:[],note:''};
+ const indR=ind0+.3*(R.a+R.r)+R.fam,tot1=B.dead+indR+R.a+R.r;
+ const ind=S.scen?indR+R.a+R.r:ind0,tot=S.scen?tot1:tot0;
+ let h='<div class="card"><div class="mu">'+(S.scen?'Com retaliação':'Sem retaliação')+' — total estimado de mortes</div><div class="big">'+fm(tot)+'</div><div class="mu">faixa plausível: '+fm(tot*.6)+' – '+fm(tot*1.7)+'</div></div>';
+ h+='<div class="card"><table><tr><td>Mortes diretas (explosão local)</td><td>'+fm(B.dead)+'</td></tr><tr><td>Feridos graves</td><td>'+fm(B.inj)+'</td></tr><tr><td>Indiretas: sistema de saúde/queimados</td><td>'+fm(med)+'</td></tr>'+(B.E.gnd?'<tr><td>Indiretas: fallout</td><td>'+fm(B.fall)+'</td></tr>':'');
+ if(S.scen)h+='<tr><td>Retaliação — mortes no país atacante ('+(A&&NUC[A]?NUC[A][1]:'—')+')</td><td>'+fm(R.a)+'</td></tr><tr><td>Contra-ataque — mortes nos aliados/alvo</td><td>'+fm(R.r)+'</td></tr><tr><td>Fome/inverno nuclear global</td><td>'+fm(R.fam)+'</td></tr><tr><td>Detonações estimadas</td><td>~'+Math.round(R.n)+'</td></tr>';
+ h+='<tr><td><b>Total direto</b></td><td><b>'+fm(B.dead)+'</b></td></tr><tr><td><b>Total indireto</b></td><td><b>'+fm(ind)+'</b></td></tr><tr><td><b>TOTAL</b></td><td><b>'+fm(tot)+'</b></td></tr></table></div>';
+ if(S.L)h+='<div class="mu">Distância: '+Math.round(dist).toLocaleString('pt-BR')+' km · tempo de voo (ICBM) ≈ '+tm+' min</div>';
+ if(S.scen&&R.note)h+='<div class="card mu">'+R.note+'</div>';
+ h+='<h3>Consequências geopolíticas</h3><ul>'+geo(A,T,S.T.name,S.L?S.L.name:'',R).map(x=>'<li>'+x+'</li>').join('')+'</ul>';
+ $('out').innerHTML=h}
+window.addEventListener('resize',()=>{});
+upd();
+})();
+</script></body></html>
