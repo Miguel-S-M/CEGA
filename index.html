@@ -134,14 +134,19 @@ function blast(gzs,land){const E=fx();
    fall+=land?Math.min(L*Wd*Math.PI/4*25*.15,3e7)/gzs.length:0}}
  return{dead,inj,fall,E}}
 function retal(A,T){
- if(!A||!NUC[A])return{note:'Atacante sem arsenal identificado (ou lançamento sem origem terrestre): sem retaliação nuclear modelada.',a:0,r:0,n:1,fam:0,resp:[]};
- let resp=[];if(NUC[T]&&T!==A)resp.push(T);(UMB[T]||[]).forEach(c=>{if(c!==A&&resp.indexOf(c)<0)resp.push(c)});
- if(!resp.length)return{note:'Ninguém com arsenal nuclear está obrigado a responder: reação seria diplomática, econômica e convencional.',a:0,r:0,n:1,fam:0,resp:[]};
- const f=P().l,Wr=resp.reduce((s,c)=>s+NUC[c][0],0)*f,Wa=NUC[A][0]*f;
- const popR=resp.reduce((s,c)=>s+(NUC[c]?NUC[c][2]:POP[c]||60),0)*1e6;
- const a=Math.min(Wr*P().d,.7*NUC[A][2]*1e6),r=Math.min(Wa*P().d,.7*popR),n=1+Wr+Wa;
+ const z=(note)=>({note:note,a:0,r:0,n:1,fam:0,resp:[]});
+ if(!A)return z('defina o LANÇAMENTO em um país (clique em terra ou use "Lançamento rápido"). Lançamento sem país (oceano/submarino): atribuição incerta, retaliação não modelada.');
+ if(A===T)return z('lançamento e alvo estão no mesmo país: não há retaliação externa.');
+ let resp=[];if(NUC[T])resp.push(T);(UMB[T]||[]).forEach(c=>{if(c!==A&&resp.indexOf(c)<0)resp.push(c)});
+ let info='',k=1;
+ if(!resp.length){const ADV={USA:['RUS','CHN'],RUS:['USA','GBR','FRA'],CHN:['USA','IND'],FRA:['RUS'],GBR:['RUS'],IND:['PAK','CHN'],PAK:['IND'],ISR:['IRN'].filter(c=>NUC[c]),PRK:['USA']}[A]||[];
+  if(!ADV.length)return z('o país alvo não tem arsenal nem aliado nuclear, e o atacante não tem rival nuclear modelado: reação só diplomática, econômica e convencional.');
+  resp=ADV;k=.3;info='Ninguém é obrigado a responder em nome do alvo; foi modelada intervenção parcial (30%) de rivais nucleares do atacante: '+resp.map(c=>NUC[c][1]).join(', ')+'.'}
+ const f=P().l*k,Wr=resp.reduce((s,c)=>s+NUC[c][0],0)*f,Wa=NUC[A]?NUC[A][0]*f:0;
+ const apop=NUC[A]?NUC[A][2]:POP[A]||60,popR=resp.reduce((s,c)=>s+(NUC[c]?NUC[c][2]:POP[c]||60),0)*1e6;
+ const a=Math.min(Wr*P().d,.7*apop*1e6),r=Math.min(Wa*P().d,.7*popR),n=1+Wr+Wa;
  const fam=n>50?5e9*Math.pow(Math.min(1,n/4400),.4)*.7:0;
- return{a,r,n,fam,resp,note:''}}
+ return{a:a,r:r,n:n,fam:fam,resp:resp,note:'',info:info}}
 function geo(A,T,Tn,An,R){const b=[];const nA=NUC[A],nT=NUC[T];
  if(nT)b.push('<b>'+Tn+'</b> é potência nuclear: doutrina de dissuasão prevê resposta imediata (lançamento sob alerta).');
  else if(UMB[T])b.push('<b>'+Tn+'</b> está sob guarda-chuva nuclear de '+UMB[T].map(c=>NUC[c][1]).join(', ')+': ataque aciona compromissos de defesa mútua (ex.: Art. 5º da OTAN).');
@@ -184,12 +189,11 @@ function upd(){
  const R=S.scen?retal(A,T):{a:0,r:0,n:1,fam:0,resp:[],note:''};
  const indR=ind0+.3*(R.a+R.r)+R.fam,tot1=B.dead+indR+R.a+R.r;
  const ind=S.scen?indR+R.a+R.r:ind0,tot=S.scen?tot1:tot0;
- let h='<div class="card"><div class="mu">'+(S.scen?'Com retaliação':'Sem retaliação')+' — total estimado de mortes</div><div class="big">'+fm(tot)+'</div><div class="mu">faixa plausível: '+fm(tot*.6)+' – '+fm(tot*1.7)+'</div></div>';
+ let h=(S.scen&&R.info?'<div class="card mu">'+R.info+'</div>':'')+(S.scen&&R.note?'<div class="card" style="border-color:var(--ac)"><b>A retaliação não muda os números:</b> '+R.note+'</div>':'')+'<div class="card"><div class="mu">'+(S.scen?'Com retaliação':'Sem retaliação')+' — total estimado de mortes</div><div class="big">'+fm(tot)+'</div><div class="mu">faixa plausível: '+fm(tot*.6)+' – '+fm(tot*1.7)+'</div></div>';
  h+='<div class="card"><table><tr><td>Mortes diretas (explosão local)</td><td>'+fm(B.dead)+'</td></tr><tr><td>Feridos graves</td><td>'+fm(B.inj)+'</td></tr><tr><td>Indiretas: sistema de saúde/queimados</td><td>'+fm(med)+'</td></tr>'+(B.E.gnd?'<tr><td>Indiretas: fallout</td><td>'+fm(B.fall)+'</td></tr>':'');
  if(S.scen)h+='<tr><td>Retaliação — mortes no país atacante ('+(A&&NUC[A]?NUC[A][1]:'—')+')</td><td>'+fm(R.a)+'</td></tr><tr><td>Contra-ataque — mortes nos aliados/alvo</td><td>'+fm(R.r)+'</td></tr><tr><td>Fome/inverno nuclear global</td><td>'+fm(R.fam)+'</td></tr><tr><td>Detonações estimadas</td><td>~'+Math.round(R.n)+'</td></tr>';
  h+='<tr><td><b>Total direto</b></td><td><b>'+fm(B.dead)+'</b></td></tr><tr><td><b>Total indireto</b></td><td><b>'+fm(ind)+'</b></td></tr><tr><td><b>TOTAL</b></td><td><b>'+fm(tot)+'</b></td></tr></table></div>';
  if(S.L)h+='<div class="mu">Distância: '+Math.round(dist).toLocaleString('pt-BR')+' km · tempo de voo (ICBM) ≈ '+tm+' min</div>';
- if(S.scen&&R.note)h+='<div class="card mu">'+R.note+'</div>';
  const rr=R.a+R.r,st=[['Dia 1',B.dead+rr*.7],['Semana 1',B.dead+rr*.9+B.fall*.5+med*.4],['Mês 1',B.dead+rr+B.fall*.9+med*.8+R.fam*.05],['Ano 1',tot]];
  h+='<h3>Linha do tempo (acumulado)</h3><div class="card"><table>'+st.map(x=>'<tr><td>'+x[0]+'</td><td>'+fm(x[1])+'</td></tr>').join('')+'</table></div>';
  const pc=c=>NUC[c]?NUC[c][2]:POP[c]||60,cr=[[S.T.name+' (alvo)',B.dead+B.fall+med]];
